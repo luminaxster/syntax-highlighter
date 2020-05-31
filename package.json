@@ -1,0 +1,41 @@
+{
+  "name": "monaco-editor-highlighter",
+  "version": "0.0.0-alpha",
+  "description": "An extensible library to highlight syntax (e.g. JSX) in the Monaco Editor using JsCodeShift.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "npm run build"
+  },
+  "peerDependencies": {
+    "monaco-editor": "^0.20.0",
+    "jscodeshift": "^0.9.0"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.10.1",
+    "babel-loader": "^8.1.0",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devuxd/SeeCodeRun.git",
+    "directory": "packages/monaco-jsx-syntax-highlighter"
+  },
+  "keywords": [
+    "monaco",
+    "editor",
+    "jsx",
+    "syntax",
+    "color",
+    "coding",
+    "highlighting"
+  ],
+  "author": "luminaxster",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devuxd/SeeCodeRun/issues"
+  },
+  "homepage": "https://github.com/devuxd/SeeCodeRun/tree/master/packages/monaco-jsx-syntax-highlighter#monaco-jsx-highlighter"
+}
