@@ -1,7 +1,7 @@
 # monaco-jsx-highlighter
 
-An extensible library to highlight JSX syntax for the Monaco Editor using JsCodeShift.
- It exposes its AST, so you can add your own syntax-based highlights. 
+An extensible library to highlight JSX syntax in the Monaco Editor using JsCodeShift.
+ It exposes its AST, so you can add your own syntax-based or custom highlights. 
 ## Example
 See it live in a [React app](https://codesandbox.io/s/monaco-editor-react-6o4u4?file=/src/index.js) 
 
