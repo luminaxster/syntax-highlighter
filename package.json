@@ -1,6 +1,6 @@
 {
   "name": "monaco-jsx-highlighter",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "An extensible library to highlight JSX syntax in the Monaco Editor using JsCodeShift.",
   "main": "dist/index.js",
   "scripts": {
