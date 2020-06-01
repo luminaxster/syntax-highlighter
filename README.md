@@ -91,7 +91,7 @@ JSXTypes.JSXText.options.inlineClassName = "mtk110.glyph.JsxText";
 ```
 
 #### Override the classes
-Take a look of the `src/JSXColoringProvider.css` file and override the CSS classes you need.
+Take a look of the [`src/JSXColoringProvider.css` file](https://github.com/luminaxster/syntax-highlighter/blob/master/src/MonacoJSXHighlighter.css) and override the CSS classes you need.
  Make sure to import your customization CSS files after you import `monaco-jsx-highlighter`;
 
 ### Creating Monaco compatible ranges from JsCodeShift 
