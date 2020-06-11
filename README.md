@@ -1,7 +1,8 @@
 # monaco-jsx-highlighter
 
-An extensible library to highlight JSX syntax in the Monaco Editor using JsCodeShift.
- It exposes its AST, so you can add your own syntax-based or custom highlights. 
+An extensible library to highlight (and comment) JSX syntax in the Monaco Editor using JsCodeShift.
+ It exposes its AST, so you can add your own syntax-based or custom highlights.
+   
 ## Example
 See it live in a [React app](https://codesandbox.io/s/monaco-editor-react-6o4u4?file=/src/index.js) 
 
@@ -24,6 +25,10 @@ yarn add monaco-jsx-highlighter
 The main method, `monacoJSXHighlighter.highLightOnDidChangeModelContent(afterHighlight: func)`,
  accepts a callback, among other parameters.
  The callback `afterHighlight` passes the AST used to highlight the code.
+ 
+ Additionally, you can add JSX commenting to your monaco editor with
+ `monacoJSXHighlighter.addJSXCommentCommand()`:
+ comments in JSX children will result in `{/*...*/}` instead of `//...`. I tried to mimic the commenting behavior of the [WebStorm IDE](https://www.jetbrains.com/webstorm/).
 
 ### TL;DR
 ```js
@@ -42,6 +47,10 @@ const monacoJSXHighlighter = new MonacoJSXHighlighter(monaco, j, monacoEditor);
 const highlighterDisposeFunc =monacoJSXHighlighter.highLightOnDidChangeModelContent();
 // Optional: Disable highlighting when needed (e.g. toggling, unmounting, pausing)
 highlighterDisposeFunc();
+
+const commentDisposeFunc =monacoJSXHighlighter.addJSXCommentCommand();
+// Optional: Disable JSX commenting when needed (e.g. toggling, unmounting, pausing)
+commentDisposeFunc();
 ```
 ### NL;PR
 
