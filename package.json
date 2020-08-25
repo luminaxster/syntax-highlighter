@@ -1,6 +1,6 @@
 {
   "name": "monaco-jsx-highlighter",
-  "version": "0.0.14-alpha-0",
+  "version": "0.0.14",
   "description": "An extensible library to highlight JSX syntax in the Monaco Editor using JsCodeShift.",
   "main": "dist/index.js",
   "scripts": {
@@ -14,16 +14,16 @@
   },
   "devDependencies": {
     "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11",
+    "webpack-cli": "^3.3.12",
     "css-loader": "^3.6.0",
     "style-loader": "^1.2.1",
     "url-loader": "^4.1.0",
     "babel-loader": "^8.1.0",
-    "@babel/cli": "^7.10.1",
-    "@babel/core": "^7.10.2",
-    "@babel/plugin-proposal-class-properties": "^7.10.1",
-    "@babel/preset-env": "^7.10.2",
-    "@babel/preset-react": "^7.10.1"
+    "@babel/cli": "^7.10.4",
+    "@babel/core": "^7.10.4",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-react": "^7.10.4"
   },
   "repository": {
     "type": "git",
