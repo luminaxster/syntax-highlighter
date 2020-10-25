@@ -461,7 +461,8 @@ class MonacoJSXHighlighter {
                         });
                     }
                     editOperations.length &&
-                    editor.executeEdits(this.commandActionId, editOperations);
+                    editor.executeEdits(this._editorCommandId, editOperations);
+                    /*commandActionId*/
                 });
 
             });

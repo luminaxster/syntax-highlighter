@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = function (env) {
     return {
         mode: env.production ? 'production' : 'development',
-        devtool: env.production ? 'source-maps' : 'eval',
+        devtool: env.production ? 'source-map' : 'eval',
         entry: './src/index.js',
         output: {
             path: path.resolve(__dirname, 'dist'),
@@ -13,7 +13,7 @@ module.exports = function (env) {
         module: {
             rules: [
                 {
-                    test: /\.(js|jsx)$/,
+                    test: /\.(js|jsx)$/i,
                     exclude: /node_modules/,
                     use: {
                         loader: "babel-loader",
