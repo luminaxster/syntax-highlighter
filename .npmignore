@@ -1,4 +1,4 @@
-node_modules/
 src/
 .gitignore
 webpack.config.js
+_config.yml

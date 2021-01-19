@@ -35,11 +35,7 @@ bower_components
 .lock-wscript
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
-build/Release
-
-# Dependency directories
-../monaco-jsx-syntax-highlighter/node_modules/
-jspm_packages/
+build
 
 # TypeScript v1 declaration files
 typings/
@@ -103,4 +99,10 @@ dist
 # TernJS port file
 .tern-port
 
+.github/
+gh-pages/
+
 node_modules
+.DS_Store
+.vscode
+jsconfig.json
