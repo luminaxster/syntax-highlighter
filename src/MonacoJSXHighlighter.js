@@ -46,13 +46,90 @@ export function prepareOptions(
 }
 
 export const HIGHLIGHT_TYPE = {
-   ALL: 'ALL', // the whole node's location
-   IDENTIFIER: 'IDENTIFIER', // look for JSX identifiers within node
-   EDGE: 'EDGE', // only the  starting and ending character in node's location
+   ELEMENT: 'ELEMENT', // jsx elements
+   ALL: 'ALL', // the whole node's location, e.g. identifier names
+   IDENTIFIER: 'IDENTIFIER', // JSX identifiers
+   EDGE: 'EDGE', // only the  starting and ending character in node's location e.g. container expressions
+   SPREAD: 'SPREAD', // only the  starting and ending characters in node's location e.g. spread child or attribute
    STYLE: 'STYLE', // for styling only, not used by node locations
 };
 
 export const HIGHLIGHT_MODE = {
+   [HIGHLIGHT_TYPE.ELEMENT]: (
+      path,
+      jsxTypeOptions,
+      decorators = [],
+      highlighterOptions,
+      locToMonacoRange,
+   ) => {
+      const loc = path.node.loc;
+      const openingElement = path.node.openingElement;
+      let elementName = null;
+      if (openingElement) {
+         elementName = openingElement.name.name;
+         
+         const startLoc = {
+            start: {...openingElement.loc.start},
+            end: {...openingElement.name.loc.start}
+         };
+         
+         const endLoc = {
+            start: {...openingElement.loc.end},
+            end: {...openingElement.loc.end}
+         };
+         endLoc.start.column--;
+         
+         if (openingElement.selfClosing) {
+            endLoc.start.column--;
+         }
+         
+         decorators.push({
+            range: locToMonacoRange(startLoc),
+            options: highlighterOptions.isUseSeparateElementStyles ?
+               JSXTypes.JSXBracket.openingElementOptions
+               : JSXTypes.JSXBracket.options,
+         });
+         
+         decorators.push({
+            range: locToMonacoRange(endLoc),
+            options: highlighterOptions.isUseSeparateElementStyles ?
+               JSXTypes.JSXBracket.openingElementOptions
+               : JSXTypes.JSXBracket.options,
+         });
+      }
+      
+      const closingElement = path.node.closingElement;
+      if (closingElement) {
+         const startLoc = {
+            start: {...closingElement.loc.start},
+            end: {...closingElement.name.loc.start}
+         };
+         
+         const endLoc = {
+            start: {...closingElement.loc.end},
+            end: {...closingElement.loc.end}
+         };
+         endLoc.start.column--;
+         
+         decorators.push({
+            range: locToMonacoRange(startLoc),
+            options: highlighterOptions.isUseSeparateElementStyles ?
+               JSXTypes.JSXBracket.closingElementOptions
+               : JSXTypes.JSXBracket.options,
+         });
+         decorators.push({
+            range: locToMonacoRange(endLoc),
+            options: highlighterOptions.isUseSeparateElementStyles ?
+               JSXTypes.JSXBracket.closingElementOptions
+               : JSXTypes.JSXBracket.options,
+         });
+      }
+      
+      highlighterOptions.isHighlightGlyph && decorators.push({
+         range: this.locToMonacoRange(loc),
+         options: JSXTypes.JSXElement.options(elementName),
+      });
+   },
    [HIGHLIGHT_TYPE.ALL]: (
       path,
       jsxTypeOptions,
@@ -60,8 +137,16 @@ export const HIGHLIGHT_MODE = {
       highlighterOptions,
       locToMonacoRange,
    ) => {
+      const loc = {
+         start: {...path.node.loc.start},
+         end: {...path.node.loc.end}
+      };
+      
+      if (path.key === 'object') {
+         loc.end = {...path.container.property.loc.start};
+      }
       locToMonacoRange && decorators.push({
-         range: locToMonacoRange(path.node.loc),
+         range: locToMonacoRange(loc),
          options: prepareOptions(path, jsxTypeOptions, highlighterOptions)
       });
       return decorators;
@@ -73,21 +158,22 @@ export const HIGHLIGHT_MODE = {
       highlighterOptions = {},
       locToMonacoRange,
    ) => {
-      path.traverse(
-         {
-            enter: p => {
-               if (p.isJSXIdentifier()) {
-                  HIGHLIGHT_MODE[HIGHLIGHT_TYPE.ALL](
-                     p,
-                     jsxTypeOptions,
-                     decorators,
-                     highlighterOptions,
-                     locToMonacoRange,
-                  );
-               }
-            }
-         }
-      );
+      
+      if (
+         path.key === 'object' ||
+         path.key === 'property' ||
+         path.key === 'name' ||
+         path.key === 'namespace'
+      ) {
+         HIGHLIGHT_MODE[HIGHLIGHT_TYPE.ALL](
+            path,
+            path.parentPath && path.parentPath.isJSXAttribute() ?
+               JSXTypes.JSXAttribute.options : jsxTypeOptions,
+            decorators,
+            highlighterOptions,
+            locToMonacoRange,
+         );
+      }
       return decorators;
    },
    [HIGHLIGHT_TYPE.EDGE]: (
@@ -100,12 +186,31 @@ export const HIGHLIGHT_MODE = {
       const options = prepareOptions(path, jsxTypeOptions, highlighterOptions);
       
       const loc = path.node.loc;
+      let innerLocKey =
+         path.isJSXSpreadChild() ? 'expression'
+            : path.isJSXSpreadAttribute() ? 'argument' : null;
       
-      const startEdgeLoc = {start: {...loc.start}, end: {...loc.start}};
-      startEdgeLoc.end.column++;
+      let innerLoc = null;
       
-      const endEdgeLoc = {start: {...loc.end}, end: {...loc.end}};
-      endEdgeLoc.start.column--;
+      if (innerLocKey) {
+         const innerNode = path.node[innerLocKey];
+         innerLoc = {
+            start: {...innerNode.loc.start},
+            end: {...innerNode.loc.end}
+         };
+         if (innerNode.extra && innerNode.extra.parenthesized) {
+            innerLoc.start.column--;
+            innerLoc.end.column++;
+         }
+      } else {
+         innerLoc = {start: {...loc.start}, end: {...loc.end}};
+         innerLoc.start.column++;
+         innerLoc.end.column--;
+      }
+      
+      const startEdgeLoc = {start: {...loc.start}, end: {...innerLoc.start}};
+      
+      const endEdgeLoc = {start: {...innerLoc.end}, end: {...loc.end}};
       
       decorators.push({
          range: locToMonacoRange(startEdgeLoc),
@@ -115,59 +220,60 @@ export const HIGHLIGHT_MODE = {
          range: locToMonacoRange(endEdgeLoc),
          options
       });
+      
       return decorators;
    },
    [HIGHLIGHT_TYPE.STYLE]: () => [], // noop
 };
 
 export const JSXTypes = {
+   JSXIdentifier: {
+      highlightScope: HIGHLIGHT_TYPE.IDENTIFIER,
+      options: {
+         inlineClassName: 'JSXElement.JSXIdentifier',
+      },
+   },
    JSXOpeningFragment: {
       highlightScope: HIGHLIGHT_TYPE.ALL,
       options: {
-         inlineClassName: 'mtk101.Identifier.JSXOpeningFragment.Bracket',
+         inlineClassName: 'JSXOpeningFragment.JSXBracket',
       },
    },
    JSXClosingFragment: {
       highlightScope: HIGHLIGHT_TYPE.ALL,
       options: {
-         inlineClassName: 'mtk102.Identifier.JSXClosingFragment.Bracket',
+         inlineClassName: 'JSXClosingFragment.JSXBracket',
       },
    },
    JSXText: {
       highlightScope: HIGHLIGHT_TYPE.ALL,
       options: {
-         inlineClassName: 'mtk104.JsxElement.JsxText',
-      },
-   },
-   JSXOpeningElement: {
-      highlightScope: HIGHLIGHT_TYPE.IDENTIFIER,
-      options: {
-         inlineClassName: 'mtk101.Identifier.JsxOpeningElement.Identifier',
-      },
-   },
-   JSXClosingElement: {
-      highlightScope: HIGHLIGHT_TYPE.IDENTIFIER,
-      options: {
-         inlineClassName: 'mtk102.Identifier.JsxClosingElement.Identifier ',
-      },
-   },
-   JSXAttribute: {
-      highlightScope: HIGHLIGHT_TYPE.IDENTIFIER,
-      options: {
-         inlineClassName: 'mtk103.Identifier.JsxAttribute.Identifier ',
+         inlineClassName: 'JSXElement.JSXText',
       },
    },
    JSXExpressionContainer: {
       highlightScope: HIGHLIGHT_TYPE.EDGE,
       options: {
-         inlineClassName: 'mtk105.Identifier.JSXExpressionContainer.Bracket',
+         inlineClassName: 'JSXExpressionContainer.JSXBracket',
+      },
+   },
+   JSXSpreadChild: {
+      highlightScope: HIGHLIGHT_TYPE.EDGE,
+      options: {
+         inlineClassName: 'JSXSpreadChild.JSXBracket',
+      },
+   },
+   JSXSpreadAttribute: {
+      highlightScope: HIGHLIGHT_TYPE.EDGE,
+      options: {
+         inlineClassName: 'JSXSpreadAttribute.JSXBracket',
       },
    },
    JSXElement: {
       highlightScope: HIGHLIGHT_TYPE.STYLE,
       options: (elementName) => (
          {
-            glyphMarginClassName: 'mtk105.glyph.Identifier.JsxElement',
+            glyphMarginClassName: 'JSXElement.JSXGlyph',
             glyphMarginHoverMessage:
                `JSX Element${elementName ? ': ' + elementName : ''}`
          }
@@ -176,13 +282,31 @@ export const JSXTypes = {
    JSXBracket: {
       highlightScope: HIGHLIGHT_TYPE.STYLE,
       options: {
-         inlineClassName: 'mtk100.Identifier.JsxElement.Bracket',
+         inlineClassName: 'JSXElement.JSXBracket',
       },
       openingElementOptions: {
-         inlineClassName: 'mtk1000.Identifier.JsxOpeningElement.Bracket',
+         inlineClassName: 'JSXOpeningElement.JSXBracket',
       },
       closingElementOptions: {
-         inlineClassName: 'mtk1001.Identifier.JsxClosingElement.Bracket',
+         inlineClassName: 'JSXClosingElement.JSXBracket',
+      },
+   },
+   JSXOpeningElement: {
+      highlightScope: HIGHLIGHT_TYPE.STYLE,
+      options: {
+         inlineClassName: 'JSXOpeningElement.JSXIdentifier',
+      },
+   },
+   JSXClosingElement: {
+      highlightScope: HIGHLIGHT_TYPE.STYLE,
+      options: {
+         inlineClassName: 'JSXClosingElement.JSXIdentifier',
+      },
+   },
+   JSXAttribute: {
+      highlightScope: HIGHLIGHT_TYPE.STYLE,
+      options: {
+         inlineClassName: 'JSXAttribute.JSXIdentifier',
       },
    },
 };
@@ -328,6 +452,46 @@ class MonacoJSXHighlighter {
       
    };
    
+   createDecoratorsByType = (
+      jsxManager,
+      jsxType,
+      jsxTypeOptions,
+      highlightScope,
+      decorators = [],
+      highlighterOptions = this.options,
+      locToMonacoRange = this.locToMonacoRange,
+   ) => {
+      jsxManager.find(jsxType)
+         .forEach(path => HIGHLIGHT_MODE[highlightScope](
+            path,
+            jsxTypeOptions,
+            decorators,
+            highlighterOptions,
+            locToMonacoRange
+            )
+         );
+      
+      return decorators;
+   };
+   
+   createJSXElementDecorators = (
+      jsxManager,
+      decorators = [],
+      highlighterOptions = this.options,
+      locToMonacoRange = this.locToMonacoRange
+   ) => {
+      jsxManager
+         .findJSXElements()
+         .forEach(path => HIGHLIGHT_MODE.ELEMENT(
+            path,
+            null,
+            decorators,
+            highlighterOptions,
+            locToMonacoRange
+         ));
+      return decorators;
+   };
+   
    extractAllDecorators = (jsxManager = this.jsxManager) => {
       const decorators = this.createJSXElementDecorators(jsxManager);
       for (const jsxType in JSXTypes) {
@@ -346,80 +510,6 @@ class MonacoJSXHighlighter {
          );
       return decorators;
    }
-   
-   createJSXElementDecorators = (
-      jsxManager,
-      decorators = [],
-      highlighterOptions = this.options,
-   ) => {
-      jsxManager
-         .findJSXElements()
-         .forEach(p => {
-            const loc = p.node.loc;
-            const openingElement = p.node.openingElement;
-            let elementName = null;
-            if (openingElement) {
-               const oLoc = openingElement.loc;
-               elementName = openingElement.name.name;
-               decorators.push({
-                  range: new monaco.Range(
-                     oLoc.start.line,
-                     oLoc.start.column + 1,
-                     oLoc.start.line,
-                     oLoc.start.column + 2
-                  ),
-                  options: highlighterOptions.isUseSeparateElementStyles ?
-                     JSXTypes.JSXBracket.openingElementOptions
-                     : JSXTypes.JSXBracket.options,
-               });
-               decorators.push({
-                  range: new monaco.Range(
-                     oLoc.end.line,
-                     oLoc.end.column + (
-                        openingElement.selfClosing ? -1 : 0
-                     ),
-                     oLoc.end.line,
-                     oLoc.end.column + 1
-                  ),
-                  options: highlighterOptions.isUseSeparateElementStyles ?
-                     JSXTypes.JSXBracket.openingElementOptions
-                     : JSXTypes.JSXBracket.options,
-               });
-            }
-            const closingElement = p.node.closingElement;
-            if (closingElement) {
-               const cLoc = closingElement.loc;
-               decorators.push({
-                  range: new monaco.Range(
-                     cLoc.start.line,
-                     cLoc.start.column + 1,
-                     cLoc.start.line,
-                     cLoc.start.column + 3
-                  ),
-                  options: highlighterOptions.isUseSeparateElementStyles ?
-                     JSXTypes.JSXBracket.closingElementOptions
-                     : JSXTypes.JSXBracket.options,
-               });
-               decorators.push({
-                  range: new monaco.Range(
-                     cLoc.end.line,
-                     cLoc.end.column,
-                     cLoc.end.line,
-                     cLoc.end.column + 1
-                  ),
-                  options: highlighterOptions.isUseSeparateElementStyles ?
-                     JSXTypes.JSXBracket.closingElementOptions
-                     : JSXTypes.JSXBracket.options,
-               });
-            }
-            
-            highlighterOptions.isHighlightGlyph && decorators.push({
-               range: this.locToMonacoRange(loc),
-               options: JSXTypes.JSXElement.options(elementName),
-            });
-         });
-      return decorators;
-   };
    
    getJSXContext = (selection, ast, editor = this.monacoEditor) => {
       
@@ -624,28 +714,6 @@ class MonacoJSXHighlighter {
          this._isGetJSXCommentActive = false;
       }
    }
-   
-   createDecoratorsByType = (
-      jsxManager,
-      jsxType,
-      jsxTypeOptions,
-      highlightScope,
-      decorators = [],
-      highlighterOptions = this.options,
-      locToMonacoRange = this.locToMonacoRange,
-   ) => {
-      jsxManager.find(jsxType)
-         .forEach(path => HIGHLIGHT_MODE[highlightScope](
-            path,
-            jsxTypeOptions,
-            decorators,
-            highlighterOptions,
-            locToMonacoRange
-            )
-         );
-      
-      return decorators;
-   };
 }
 
 export default MonacoJSXHighlighter;

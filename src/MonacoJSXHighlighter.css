@@ -1,79 +1,61 @@
-.mtk100.Identifier.JsxElement.Bracket {
-    color: darkorange;
-}
-
-.mtk1000.Identifier.JsxOpeningElement.Bracket {
-    color: darkorange;
-    font-weight: bold;
-}
-
-.mtk1001.Identifier.JsxClosingElement.Bracket {
-    color: darkorange;
-    font-weight: lighter;
-}
-
-.mtk101.Identifier.JsxOpeningElement.Identifier {
+.JSXElement.JSXIdentifier{
     color: royalblue;
 }
 
-.mtk102.Identifier.JsxClosingElement.Identifier {
-    color: royalblue;
-    font-weight: lighter;
-}
-
-.mtk101.Identifier.JSXOpeningFragment.Bracket {
+.JSXElement.JSXBracket {
     color: darkorange;
-    font-weight: bold;
 }
 
-.mtk102.Identifier.JSXClosingFragment.Bracket {
-    color: darkorange;
-    font-weight: bold;
-}
-
-.mtk103.Identifier.JsxAttribute.Identifier {
-    color: steelblue;
-}
-
-.mtk104.JsxElement.JsxText {
+.JSXElement.JSXText {
     color: darkgoldenrod;
 }
 
-.mtk105.glyph.Identifier.JsxElement {
-    background: #61dafb;
+.JSXElement.JSXGlyph {
+    background: cyan;
     opacity: 0.25;
 }
 
-.mtk105.Identifier.JSXExpressionContainer.Bracket {
+.JSXOpeningFragment.JSXBracket {
     color: darkorange;
     font-weight: bold;
 }
 
-/*.mtk12.Identifier.JsxExpression.JsxClosingElement {*/
-/*color: #ec5f67;*/
-/*}*/
+.JSXClosingFragment.JSXBracket {
+    color: darkorange;
+    font-weight: bold;
+}
 
-/*.mtk12.Identifier.JsxSelfClosingElement {*/
-/*color: #ec5f67;*/
-/*}*/
-/*.mtk12.Identifier.VariableStatement.JsxClosingElement {*/
-/*color: #ec5f67 !important;*/
-/*}*/
-/*.mtk12.VariableStatement.JsxSelfClosingElement.Identifier {*/
-/*color: #ec5f67;*/
-/*}*/
-/*.mtk12.Identifier.JsxAttribute.VariableDeclaration {*/
-/*color: crimson;*/
-/*}*/
-/*.mtk12.JsxExpression.VariableStatement {*/
-/*color: #fac863;*/
-/*}*/
-/*.mtk12.VariableStatement.JsxSelfClosingElement {*/
-/*color: #ede0e0;*/
-/*}*/
-/*.mtk12.VariableStatement.JsxClosingElement {*/
-/*color: #ede0e0;*/
-/*}*/
-/*.JsxText {*/
-/*color: #0c141f;*/
-/*}*/
+.JSXOpeningElement.JSXBracket {
+    color: darkorange;
+    font-weight: bold;
+}
+
+.JSXOpeningElement.JSXIdentifier {
+    color: royalblue;
+}
+
+.JSXClosingElement.JSXBracket {
+    color: darkorange;
+    font-weight: lighter;
+}
+
+.JSXClosingElement.JSXIdentifier {
+    color: royalblue;
+    font-weight: lighter;
+}
+
+.JSXAttribute.JSXIdentifier {
+    color: steelblue;
+}
+
+.JSXExpressionContainer.JSXBracket {
+    color: darkorange;
+}
+
+.JSXSpreadChild.JSXBracket {
+    color: darkorange;
+}
+
+.JSXSpreadAttribute.JSXBracket {
+    color: darkorange;
+}

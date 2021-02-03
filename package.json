@@ -1,6 +1,6 @@
 {
   "name": "monaco-jsx-highlighter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An extensible library to highlight JSX syntax in the Monaco Editor using Babel.",
   "author": "luminaxster",
   "license": "MIT",

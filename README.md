@@ -1,12 +1,14 @@
 # monaco-jsx-highlighter
 
 An extensible library to highlight (and comment) JSX syntax in the Monaco Editor
-using Babel. It exposes its AST after it does its magic, so you can add your own syntax-based or custom
-highlights.
+using Babel. It exposes its AST after it does its magic, so you can add your own
+syntax-based or custom highlights.
 
 ## Example
 
-See it live in a [React app](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js).
+See it live in
+a [React app](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js)
+.
 
 ## Dependencies
 
@@ -39,7 +41,10 @@ import traverse from "@babel/traverse";
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 
 // Customize Babel directly
-const babelParse = code => parse(code, {sourceType: "module", plugins: ["jsx"]});
+const babelParse = code => parse(code, {
+   sourceType: "module",
+   plugins: ["jsx"]
+});
 
 const elem = document.getElementById("editor");
 const monacoEditor = monaco.editor.create(elem, {
@@ -61,14 +66,17 @@ commentDisposeFunc();
 ## New in v1.x
 
 - Babel is now used directly instead of via JsCodeShift.
-- React fragments highlighting.
+- React fragment, spread child, spread attribute, and container expression
+  highlighting.
 - highLightOnDidChangeModelContent(debounceTime) method debounces highlight
   updates.
 - Several defect repairs.
 
 ### NL;PR
 
-The main method, `monacoJSXHighlighter.highLightOnDidChangeModelContent(debounceTime: number, afterHighlight: func, ...)`, accepts a callback, among other parameters. The callback `afterHighlight`
+The main
+method, `monacoJSXHighlighter.highLightOnDidChangeModelContent(debounceTime: number, afterHighlight: func, ...)`
+, accepts a callback, among other parameters. The callback `afterHighlight`
 passes the AST used to highlight the code.
 
 Additionally, you can add JSX commenting to your monaco editor with
@@ -142,7 +150,9 @@ This only affects the constructor signature:
  );
 ```
 
-Also, `monacoJSXHighlighter.highLightOnDidChangeModelContent` method now has a debounce time as first parameter on its signature:
+Also, `monacoJSXHighlighter.highLightOnDidChangeModelContent` method now has a
+debounce time as first parameter on its signature:
+
 ```diff
 monacoJSXHighlighter.highLightOnDidChangeModelContent(
 - afterHighlight: func,
