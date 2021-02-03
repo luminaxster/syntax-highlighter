@@ -39,7 +39,7 @@ import traverse from "@babel/traverse";
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 
 // Customize Babel directly
-const babelParse = code => parse(code, {sourceType: "module",plugins: ["jsx"]});
+const babelParse = code => parse(code, {sourceType: "module", plugins: ["jsx"]});
 
 const elem = document.getElementById("editor");
 const monacoEditor = monaco.editor.create(elem, {
@@ -133,9 +133,21 @@ Babel:
 This only affects the constructor signature:
 
 ```diff
-- const monacoJSXHighlighter = new MonacoJSXHighlighter(monaco, j, monacoEditor, defaultOptions);
-+ const babelParse = code=>parse(code, { plugins: ["jsx"]});
-+ const monacoJSXHighlighter = new MonacoJSXHighlighter(monaco, babelParse, traverse, monacoEditor);
++ const babelParse = code => parse(code, {sourceType: "module", plugins: ["jsx"]});
+ const monacoJSXHighlighter = new MonacoJSXHighlighter(
+  monaco,
+- j,
++ babelParse, traverse,
+  monacoEditor
+ );
+```
+
+Also, `monacoJSXHighlighter.highLightOnDidChangeModelContent` method now has a debounce time as first parameter on its signature:
+```diff
+monacoJSXHighlighter.highLightOnDidChangeModelContent(
+- afterHighlight: func,
++ debounceTime: number, afterHighlight: func,
+ ...)
 ```
 
 ### Customizing via CSS
