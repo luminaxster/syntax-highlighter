@@ -39,7 +39,7 @@ import traverse from "@babel/traverse";
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 
 // Customize Babel directly
-const babelParse = code => parse(code, {plugins: ["jsx"]});
+const babelParse = code => parse(code, {sourceType: "module",plugins: ["jsx"]});
 
 const elem = document.getElementById("editor");
 const monacoEditor = monaco.editor.create(elem, {
