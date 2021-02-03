@@ -1,7 +1,13 @@
 {
   "name": "monaco-jsx-highlighter",
-  "version": "0.0.16",
-  "description": "An extensible library to highlight JSX syntax in the Monaco Editor using JsCodeShift.",
+  "version": "1.0.0",
+  "description": "An extensible library to highlight JSX syntax in the Monaco Editor using Babel.",
+  "author": "luminaxster",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/luminaxster/syntax-highlighter/issues"
+  },
+  "homepage": "https://luminaxster.github.io/syntax-highlighter/",
   "main": "dist/index.js",
   "scripts": {
     "build-dev": "webpack --env development",
@@ -9,24 +15,26 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "peerDependencies": {
-    "monaco-editor": "^0.21.3",
-    "jscodeshift": "^0.11.0"
+    "monaco-editor": "^0.22.3",
+    "@babel/parser": "^7.12.13",
+    "@babel/traverse": "^7.12.13"
   },
   "devDependencies": {
-    "monaco-editor": "^0.21.3",
-    "jscodeshift": "^0.11.0",
-    "webpack": "^5.15.0",
-    "webpack-cli": "^4.3.1",
+    "monaco-editor": "^0.22.3",
+    "@babel/parser": "^7.12.13",
+    "@babel/traverse": "^7.12.12",
+    "webpack": "^5.20.0",
+    "webpack-cli": "^4.5.0",
     "schema-utils": "^3.0.0",
     "css-loader": "^5.0.1",
     "style-loader": "^2.0.0",
     "url-loader": "^4.1.1",
     "babel-loader": "^8.2.2",
-    "@babel/cli": "^7.12.10",
-    "@babel/core": "^7.12.10",
-    "@babel/plugin-proposal-class-properties": "^7.12.1",
-    "@babel/preset-env": "^7.12.11",
-    "@babel/preset-react": "^7.12.10"
+    "@babel/cli": "^7.12.13",
+    "@babel/core": "^7.12.13",
+    "@babel/plugin-proposal-class-properties": "^7.12.13",
+    "@babel/preset-env": "^7.12.13",
+    "@babel/preset-react": "^7.12.13"
   },
   "repository": {
     "type": "git",
@@ -35,16 +43,15 @@
   "keywords": [
     "monaco",
     "editor",
+    "babel",
     "jsx",
     "syntax",
     "color",
     "coding",
     "highlighting"
   ],
-  "author": "luminaxster",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/luminaxster/syntax-highlighter/issues"
-  },
-  "homepage": "https://luminaxster.github.io/syntax-highlighter/"
+  "engines": {
+    "node": "10",
+    "npm": "6"
+  }
 }

@@ -21,6 +21,16 @@
     font-weight: lighter;
 }
 
+.mtk101.Identifier.JSXOpeningFragment.Bracket {
+    color: darkorange;
+    font-weight: bold;
+}
+
+.mtk102.Identifier.JSXClosingFragment.Bracket {
+    color: darkorange;
+    font-weight: bold;
+}
+
 .mtk103.Identifier.JsxAttribute.Identifier {
     color: steelblue;
 }
@@ -32,6 +42,11 @@
 .mtk105.glyph.Identifier.JsxElement {
     background: #61dafb;
     opacity: 0.25;
+}
+
+.mtk105.Identifier.JSXExpressionContainer.Bracket {
+    color: darkorange;
+    font-weight: bold;
 }
 
 /*.mtk12.Identifier.JsxExpression.JsxClosingElement {*/
