@@ -383,6 +383,15 @@ class MonacoJSXHighlighter {
       this.jsxManager = null;
    }
    
+   resetDeltaDecorations(){
+      this.JSXDecoratorIds = (this.monacoEditor &&
+         this.monacoEditor.deltaDecorations(
+            this.JSXDecoratorIds || [],
+            [],
+         )
+      );
+   }
+   
    getAstPromise = forceUpdate => new Promise((resolve) => {
       if (
          forceUpdate ||
@@ -440,18 +449,14 @@ class MonacoJSXHighlighter {
       this._isHighlightBoundToModelContentChanges = true;
       
       this.monacoEditor.onDidDispose(() => {
-         this.JSXDecoratorIds = (this.monacoEditor &&
-            this.monacoEditor.deltaDecorations(
-               this.JSXDecoratorIds || [],
-               [],
-            )
-         );
+         this.resetDeltaDecorations();
          highlighterDisposer = null;
          this._isEditorDisposed = true;
          this._isHighlightBoundToModelContentChanges = false;
       });
       return () => {
          this.resetState();
+         this.resetDeltaDecorations();
          if (this._isEditorDisposed ||
             !this._isHighlightBoundToModelContentChanges
          ) {
