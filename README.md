@@ -4,35 +4,15 @@ An extensible library to highlight (and comment) JSX syntax in the Monaco Editor
 using Babel. It exposes its AST after it does its magic, so you can add your own
 syntax-based or custom highlights.
 
-## Example
+![monaco-jsx-highlighter demo](./msh_demo.gif)
+
+## Live Demo
 
 See it live in
 a [React app](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js)
 .
 
-## Dependencies
-
-It requires [`monaco-editor`](https://www.npmjs.com/package/monaco-editor)
-, [`@babel/parser`](https://www.npmjs.com/package/@babel/parser)
-and [`@babel/traverse`](https://www.npmjs.com/package/@babel/traverse), for
-convenience, they are listed as peer dependencies and passed by reference (so
-you can do lazy loading). Please install them before `monaco-jsx-highlighter`;
-
-## Installation
-
-Install the package in your project directory with:
-
-```sh
-// with npm
-npm install monaco-jsx-highlighter
-
-// with yarn
-yarn add monaco-jsx-highlighter
-```
-
-## Usage
-
-### TL;DR
+## TL;DR
 
 ```js
 import monaco from 'monaco-editor';
@@ -40,27 +20,37 @@ import {parse} from "@babel/parser";
 import traverse from "@babel/traverse";
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 
-// Customize Babel directly
+// Minimal Babel setup for React JSX parsing:
 const babelParse = code => parse(code, {
    sourceType: "module",
    plugins: ["jsx"]
 });
 
-const elem = document.getElementById("editor");
-const monacoEditor = monaco.editor.create(elem, {
-   value: 'const AB=<A x={d}><B>{"hello"}</B></A>;',
-   language: 'javascript'
-});
 // Instantiate the highlighter
-const monacoJSXHighlighter = new MonacoJSXHighlighter(monaco, babelParse, traverse, monacoEditor);
-// Enable highlighting
-const highlighterDisposeFunc = monacoJSXHighlighter.highLightOnDidChangeModelContent(100); // debounceTime default
-// Optional: Disable highlighting when needed (e.g. toggling, unmounting, pausing)
-highlighterDisposeFunc();
+const monacoJSXHighlighter = new MonacoJSXHighlighter(
+   monaco, babelParse, traverse, getMonacoEditor()
+);
+// Activate highlighting (debounceTime default: 100ms)
+monacoJSXHighlighter.highLightOnDidChangeModelContent(100);
+// Activate JSX commenting
+monacoJSXHighlighter.addJSXCommentCommand();
+// Done =)
 
-const commentDisposeFunc = monacoJSXHighlighter.addJSXCommentCommand();
+function getMonacoEditor(){
+  return monaco.editor.create(
+          document.getElementById("editor"), {
+            value: 'const AB=<A x={d}><B>{"hello"}</B></A>;',
+            language: 'javascript'
+          });
+}
+
+// Optional: Disable highlighting when needed (e.g. toggling, unmounting, pausing)
+// const highlighterDisposeFunc = monacoJSXHighlighter.highLightOnDidChangeModelContent(100);
+// highlighterDisposeFunc();
+
 // Optional: Disable JSX commenting when needed (e.g. toggling, unmounting, pausing)
-commentDisposeFunc();
+// const commentDisposeFunc = monacoJSXHighlighter.addJSXCommentCommand();
+// commentDisposeFunc();
 ```
 
 ## New in v1.x
@@ -72,7 +62,28 @@ commentDisposeFunc();
   updates.
 - Several defect repairs.
 
-### NL;PR
+## NL;PR
+
+### Dependencies
+
+It requires [`monaco-editor`](https://www.npmjs.com/package/monaco-editor)
+, [`@babel/parser`](https://www.npmjs.com/package/@babel/parser)
+and [`@babel/traverse`](https://www.npmjs.com/package/@babel/traverse), for
+convenience, they are listed as peer dependencies and passed by reference (so
+you can do lazy loading). Please install them before `monaco-jsx-highlighter`;
+
+### Installation
+
+Install the package in your project directory with:
+
+```sh
+// with npm
+npm install monaco-jsx-highlighter
+
+// with yarn
+yarn add monaco-jsx-highlighter
+```
+
 
 The main
 method, `monacoJSXHighlighter.highLightOnDidChangeModelContent(debounceTime: number, afterHighlight: func, ...)`
@@ -84,6 +95,8 @@ Additionally, you can add JSX commenting to your monaco editor with
 comments in JSX children will result in `{/*...*/}` instead of `//...`. I tried
 to mimic the commenting behavior of
 the [WebStorm IDE](https://www.jetbrains.com/webstorm/).
+
+### Alternate Usage
 
 ```js
 // You can call it directly at anytime
@@ -178,11 +191,11 @@ the [`src/JSXColoringProvider.css` file](https://github.com/luminaxster/syntax-h
 and override the CSS classes you need. Make sure to import your customization
 CSS files after you import `monaco-jsx-highlighter`;
 
-### Creating Monaco compatible ranges from JsCodeShift
+### Creating Monaco compatible ranges from Babel
 
 ```js
 import {configureLocToMonacoRange} from 'monaco-jsx-highlighter';
-// locToMonacoRange: converts JsCodeShift locations to Monaco Ranges
+// locToMonacoRange: converts Babel locations to Monaco Ranges
 const locToMonacoRange = configureLocToMonacoRange(monaco);
-const monacoRange = locToMonacoRange(astNode.val.loc);
+const monacoRange = locToMonacoRange(babelAstNode.loc);
 ```

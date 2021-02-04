@@ -5,6 +5,42 @@ const defaultOptions = {
    isHighlightGlyph: false,
    iShowHover: false,
    isUseSeparateElementStyles: false,
+   throwJSXParseErrors: false,
+};
+
+export const configureLocToMonacoRange = (
+   _monaco = monaco, parserType = 'babel'
+) => {
+   switch (parserType) {
+      case 'babel':
+      default:
+         return (
+            loc,
+            startLineOffset = 0,
+            startColumnOffset = 0,
+            endLineOffset = 0,
+            endColumnOffset = 0,
+         ) => {
+            if (!loc || !loc.start) {
+               return new _monaco.Range(
+                  1,
+                  1,
+                  1,
+                  1
+               );
+            }
+            return new _monaco.Range(
+               startLineOffset + loc.start.line,
+               startColumnOffset + loc.start.column + 1,
+               endLineOffset + loc.end ?
+                  loc.end.line
+                  : loc.start.line,
+               endColumnOffset + loc.end ?
+                  loc.end.column + 1
+                  : loc.start.column + 1,
+            );
+         };
+   }
 };
 
 export function makeJSXTraverse() {
@@ -316,41 +352,6 @@ export const JSXCommentContexts = {
    JSX: 'JSX'
 }
 
-export const configureLocToMonacoRange = (
-   _monaco = monaco, parserType = 'babel'
-) => {
-   switch (parserType) {
-      case 'babel':
-      default:
-         return (
-            loc,
-            startLineOffset = 0,
-            startColumnOffset = 0,
-            endLineOffset = 0,
-            endColumnOffset = 0,
-         ) => {
-            if (!loc || !loc.start) {
-               return new _monaco.Range(
-                  1,
-                  1,
-                  1,
-                  1
-               );
-            }
-            return new _monaco.Range(
-               startLineOffset + loc.start.line,
-               startColumnOffset + loc.start.column + 1,
-               endLineOffset + loc.end ?
-                  loc.end.line
-                  : loc.start.line,
-               endColumnOffset + loc.end ?
-                  loc.end.column + 1
-                  : loc.start.column + 1,
-            );
-         };
-   }
-};
-
 class MonacoJSXHighlighter {
    commentActionId = "editor.action.commentLine";
    // commandActionId = "jsx-comment-edit";
@@ -372,10 +373,43 @@ class MonacoJSXHighlighter {
       const {parserType} = this.options;
       this.locToMonacoRange = configureLocToMonacoRange(monaco, parserType);
       this.monacoEditor = monacoEditor;
+      this.resetState();
    }
    
-   getAstPromise = () => new Promise((resolve) => {
-      resolve(parse(this.monacoEditor.getValue()));
+   resetState() {
+      this.prevEditorValue = null;
+      this.editorValue = null;
+      this.ast = null;
+      this.jsxManager = null;
+   }
+   
+   getAstPromise = forceUpdate => new Promise((resolve) => {
+      if (
+         forceUpdate ||
+         !this.editorValue ||
+         this.editorValue !== this.prevEditorValue
+      ) {
+         this.prevEditorValue = this.editorValue;
+         this.editorValue = this.monacoEditor.getValue();
+         try {
+            this.ast = parse(this.editorValue);
+         } catch (e) {
+            if (
+               e instanceof SyntaxError &&
+               !e.message.includes('JSX')
+            ) {
+               this.resetState();
+               throw e;
+            } else {
+               if (this.options.throwJSXParseErrors) {
+                  throw e;
+               } else {
+                  resolve(this.ast);
+               }
+            }
+         }
+      }
+      resolve(this.ast);
    });
    
    highLightOnDidChangeModelContent = (
@@ -406,21 +440,24 @@ class MonacoJSXHighlighter {
       this._isHighlightBoundToModelContentChanges = true;
       
       this.monacoEditor.onDidDispose(() => {
+         this.JSXDecoratorIds = (this.monacoEditor &&
+            this.monacoEditor.deltaDecorations(
+               this.JSXDecoratorIds || [],
+               [],
+            )
+         );
          highlighterDisposer = null;
          this._isEditorDisposed = true;
          this._isHighlightBoundToModelContentChanges = false;
       });
       return () => {
+         this.resetState();
          if (this._isEditorDisposed ||
             !this._isHighlightBoundToModelContentChanges
          ) {
             return;
          }
          highlighterDisposer.dispose();
-         this.monacoEditor.deltaDecorations(
-            this.JSXDecoratorIds || [],
-            [],
-         );
          highlighterDisposer = null;
          this._isHighlightBoundToModelContentChanges = false;
       };
@@ -440,16 +477,14 @@ class MonacoJSXHighlighter {
          .then(afterHighlight)
          .catch(onError);
    
-   highlight = (ast, jsxTraverseAst = _jsxTraverseAst, forceUpdate) => {
+   highlight = (ast, jsxTraverseAst = _jsxTraverseAst) => {
       return new Promise((resolve) => {
-         if (ast && (forceUpdate || ast !== this.ast)) {
-            this.ast = ast;
-            this.jsxManager = _jsxTraverseAst(ast);
+         if (ast) {
+            this.jsxManager = jsxTraverseAst(ast);
             this.decorators = this.extractAllDecorators(this.jsxManager);
-            resolve(ast);
          }
+         resolve(ast);
       });
-      
    };
    
    createDecoratorsByType = (
@@ -461,7 +496,7 @@ class MonacoJSXHighlighter {
       highlighterOptions = this.options,
       locToMonacoRange = this.locToMonacoRange,
    ) => {
-      jsxManager.find(jsxType)
+      jsxManager && jsxManager.find(jsxType)
          .forEach(path => HIGHLIGHT_MODE[highlightScope](
             path,
             jsxTypeOptions,
@@ -480,7 +515,7 @@ class MonacoJSXHighlighter {
       highlighterOptions = this.options,
       locToMonacoRange = this.locToMonacoRange
    ) => {
-      jsxManager
+      jsxManager && jsxManager
          .findJSXElements()
          .forEach(path => HIGHLIGHT_MODE.ELEMENT(
             path,
@@ -511,93 +546,110 @@ class MonacoJSXHighlighter {
       return decorators;
    }
    
-   getJSXContext = (selection, ast, editor = this.monacoEditor) => {
-      
-      const range = new monaco.Range(
-         selection.startLineNumber,
-         0,
-         selection.startLineNumber,
-         0
-      );
-      
-      
-      let minRange = null;
-      let path = null;
+   getJSXContext = (
+      selection,
+      ast,
+      monacoEditor = this.monacoEditor,
+      locToMonacoRange = this.locToMonacoRange
+   ) => {
       let jsxManager = ast ? this.jsxManager : null;
       if (!this._isHighlightBoundToModelContentChanges) {
          jsxManager = ast ? _jsxTraverseAst(ast) : null;
       }
       
-      jsxManager && jsxManager.findJSXElements().forEach(p => {
-         const loc = p.node.loc;
-         const _range = this.locToMonacoRange(loc);
-         
-         if (_range.intersectRanges(range)) {
-            if (!minRange || minRange.containsRange(_range)) {
-               minRange = _range;
+      if (!jsxManager) {
+         return JSXCommentContexts.JS;
+      }
+      
+      let startColumn =
+         monacoEditor.getModel().getLineFirstNonWhitespaceColumn(
+            selection.startLineNumber
+         );
+      
+      const commentableRange = new monaco.Range(
+         selection.startLineNumber,
+         startColumn,
+         selection.startLineNumber,
+         startColumn,
+      );
+      
+      startColumn = startColumn ? startColumn - 1 : 0;
+      const containingRange = new monaco.Range(
+         selection.startLineNumber,
+         startColumn,
+         selection.startLineNumber,
+         startColumn,
+      );
+      
+      
+      let minRange = null;
+      let minCommentableRange = null;
+      let path = null;
+      let commentablePath = null;
+      
+      jsxManager.jsxExpressions.forEach(p => {
+         const jsxRange = locToMonacoRange(p.node.loc);
+         if ((p.key === 'name' || p.key === 'property') &&
+            p.isJSXIdentifier() &&
+            jsxRange.intersectRanges(commentableRange)) {
+            // intersectingPaths.push(p);
+            if (!minCommentableRange || minCommentableRange.containsRange(jsxRange)) {
+               minCommentableRange = jsxRange;
+               commentablePath = p;
+            }
+         }
+         if (jsxRange.intersectRanges(containingRange)) {
+            if (!minRange || minRange.containsRange(jsxRange)) {
+               minRange = jsxRange;
                path = p;
             }
          }
       });
-      let leftmostNode = null;
-      let leftmostJsxTextNode = null;
-      let leftmostNodeRange = null;
-      let leftmostJsxTextNodeRange = null;
       
-      if (path) {
-         const {children = []} = path.node || {};
-         const getLeftMostNode = node => {
-            const loc = node && node.loc;
-            const _range = loc && this.locToMonacoRange(loc);
-            
-            if (node.type === 'JSXText') {
-               if (!leftmostNode && _range.containsRange(range)) {
-                  leftmostJsxTextNode = node;
-                  leftmostJsxTextNodeRange = _range;
-               }
-            } else {
-               if (_range &&
-                  _range.startLineNumber === range.startLineNumber) {
-                  if (
-                     !leftmostNode ||
-                     _range.startColumn < leftmostNodeRange.startColumn
-                  ) {
-                     leftmostNode = node;
-                     leftmostNodeRange = _range;
-                     
-                  }
-               }
-               
-            }
-         }
-         children.forEach(getLeftMostNode);
+      if (!path || path.isJSXExpressionContainer() || commentablePath) {
+         return JSXCommentContexts.JS;
+      } else {
+         return JSXCommentContexts.JSX;
       }
-      let commentContext = leftmostNode || leftmostJsxTextNode ?
-         JSXCommentContexts.JSX : JSXCommentContexts.JS;
-      return commentContext;
    };
    
-   getJSXCommentContext = (
+   runJSXCommentContextAndAction = (
       selection,
       getAstPromise = this.getAstPromise,
       onJsCodeShiftErrors = error => error,
-      editor = this.monacoEditor
+      editor = this.monacoEditor,
+      runJsxCommentAction
    ) => {
       return new Promise((resolve) => {
             if (this._isHighlightBoundToModelContentChanges) {
-               resolve(this.getJSXContext(selection, this.ast, editor));
+               resolve(
+                  runJsxCommentAction(
+                     this.getJSXContext(selection, this.ast, editor)
+                  )
+               );
             } else {
                getAstPromise().then(ast => {
-                     resolve(this.getJSXContext(selection, ast, editor));
+                     resolve(
+                        runJsxCommentAction(
+                           this.getJSXContext(selection, ast, editor)
+                        )
+                     );
                   })
                   .catch(
                      (error) => resolve(
-                        this.getJSXContext(selection, null, editor)
+                        runJsxCommentAction(
+                           this.getJSXContext(selection, null, editor)
+                        )
                      ) || onJsCodeShiftErrors(error)
                   )
             }
          }
-      ).catch(onJsCodeShiftErrors);
+      ).catch(error => (
+            runJsxCommentAction(
+               this.getJSXContext(selection, null, editor))
+            || onJsCodeShiftErrors(error)
+         )
+      );
    };
    
    executeEditorEdits = (
@@ -623,6 +675,11 @@ class MonacoJSXHighlighter {
       editor = this.monacoEditor,
    ) => {
       this._isGetJSXCommentActive = true;
+      this.runDefaultMonacoCommentAction = () => {
+         editor.getAction(this.commentActionId).run();
+         this.resetState();
+      };
+      
       this._editorCommandId = editor.addCommand(
          monaco.KeyMod.CtrlCmd | monaco.KeyCode.US_SLASH,
          () => {
@@ -633,16 +690,22 @@ class MonacoJSXHighlighter {
             const selection = editor.getSelection();
             const model = editor.getModel();
             
-            this.getJSXCommentContext(
-               selection,
-               getAstPromise,
-               onJsCodeShiftErrors,
-               editor,
-            ).then((commentContext) => {
-               
+            const jsCommentRange = new monaco.Range(
+               selection.startLineNumber,
+               model.getLineFirstNonWhitespaceColumn(selection.startLineNumber),
+               selection.startLineNumber,
+               model.getLineMaxColumn(selection.startLineNumber),
+            );
+            const jsCommentText = model.getValueInRange(jsCommentRange);
+            
+            if (jsCommentText.match(/^\s*\/[\/\*]/)) {
+               this.runDefaultMonacoCommentAction();
+               return;
+            }
+            
+            const runJsxCommentAction = (commentContext) => {
                
                let isUnCommentAction = true;
-               
                const commentsData = [];
                
                for (let i = selection.startLineNumber;
@@ -669,7 +732,7 @@ class MonacoJSXHighlighter {
                
                if (commentContext !== JSXCommentContexts.JSX
                   && !isUnCommentAction) {
-                  editor.getAction(this.commentActionId).run();
+                  this.runDefaultMonacoCommentAction();
                   return;
                }
                
@@ -701,8 +764,15 @@ class MonacoJSXHighlighter {
                editOperations.length &&
                editor.executeEdits(this._editorCommandId, editOperations);
                /*commandActionId*/
-            });
+            };
             
+            this.runJSXCommentContextAndAction(
+               selection,
+               getAstPromise,
+               onJsCodeShiftErrors,
+               editor,
+               runJsxCommentAction
+            ).catch(onJsCodeShiftErrors);
          });
       
       this.monacoEditor.onDidDispose(() => {
