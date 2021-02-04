@@ -5,7 +5,7 @@ const defaultOptions = {
    isHighlightGlyph: false,
    iShowHover: false,
    isUseSeparateElementStyles: false,
-   throwJSXParseErrors: false,
+   isThrowJSXParseErrors: false,
 };
 
 export const configureLocToMonacoRange = (
@@ -85,8 +85,7 @@ export const HIGHLIGHT_TYPE = {
    ELEMENT: 'ELEMENT', // jsx elements
    ALL: 'ALL', // the whole node's location, e.g. identifier names
    IDENTIFIER: 'IDENTIFIER', // JSX identifiers
-   EDGE: 'EDGE', // only the  starting and ending character in node's location e.g. container expressions
-   SPREAD: 'SPREAD', // only the  starting and ending characters in node's location e.g. spread child or attribute
+   EDGE: 'EDGE', // only the  starting and ending characters in node's location e.g. spread child or attribute, container expressions
    STYLE: 'STYLE', // for styling only, not used by node locations
 };
 
@@ -383,7 +382,7 @@ class MonacoJSXHighlighter {
       this.jsxManager = null;
    }
    
-   resetDeltaDecorations(){
+   resetDeltaDecorations() {
       this.JSXDecoratorIds = (this.monacoEditor &&
          this.monacoEditor.deltaDecorations(
             this.JSXDecoratorIds || [],
@@ -410,7 +409,7 @@ class MonacoJSXHighlighter {
                this.resetState();
                throw e;
             } else {
-               if (this.options.throwJSXParseErrors) {
+               if (this.options.isThrowJSXParseErrors) {
                   throw e;
                } else {
                   resolve(this.ast);
@@ -543,6 +542,7 @@ class MonacoJSXHighlighter {
             decorators,
          );
       }
+      
       this.JSXDecoratorIds =
          this.monacoEditor.deltaDecorations(
             this.JSXDecoratorIds || [],
@@ -597,7 +597,6 @@ class MonacoJSXHighlighter {
          if ((p.key === 'name' || p.key === 'property') &&
             p.isJSXIdentifier() &&
             jsxRange.intersectRanges(commentableRange)) {
-            // intersectingPaths.push(p);
             if (!minCommentableRange || minCommentableRange.containsRange(jsxRange)) {
                minCommentableRange = jsxRange;
                commentablePath = p;
