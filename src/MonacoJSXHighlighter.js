@@ -469,7 +469,7 @@ class MonacoJSXHighlighter {
          highlighterDisposer = null;
          this._isHighlightBoundToModelContentChanges = false;
       });
-      return;
+      return onDispose;
    };
    
    highlightCode = (
