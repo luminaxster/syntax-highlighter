@@ -351,12 +351,11 @@ export const JSXCommentContexts = {
    JSX: 'JSX'
 }
 
+export const COMMENT_ACTION_ID = "editor.action.commentLine";
+
 class MonacoJSXHighlighter {
-   commentActionId = "editor.action.commentLine";
-   // commandActionId = "jsx-comment-edit";
    _isHighlightBoundToModelContentChanges = false;
-   _isGetJSXCommentActive = false;
-   _isEditorDisposed = false;
+   _isJSXCommentCommandActive = false;
    
    constructor(
       monacoRef,
@@ -423,48 +422,54 @@ class MonacoJSXHighlighter {
    highLightOnDidChangeModelContent = (
       debounceTime = 100,
       afterHighlight = ast => ast,
-      onError = error => console.error(error),
+      onHighlightError = error => console.error(error),
       getAstPromise = this.getAstPromise,
-      onJsCodeShiftErrors = error => console.log(error),
+      onParseAstError = error => console.log(error),
    ) => {
-      this.highlightCode(
-         afterHighlight, onError, getAstPromise, onJsCodeShiftErrors
-      );
+      const highlightCallback = () => {
+         this.highlightCode(
+            afterHighlight,
+            onHighlightError,
+            getAstPromise,
+            onParseAstError
+         );
+      };
+      
+      highlightCallback();
       
       let tid = null;
       
       let highlighterDisposer = this.monacoEditor.onDidChangeModelContent(
          () => {
             clearTimeout(tid);
-            setTimeout(() => {
-                  this.highlightCode(
-                     afterHighlight, onError, getAstPromise, onJsCodeShiftErrors
-                  );
-               },
+            setTimeout(
+               highlightCallback,
                debounceTime
             );
          }
       );
       this._isHighlightBoundToModelContentChanges = true;
       
-      this.monacoEditor.onDidDispose(() => {
-         this.resetDeltaDecorations();
-         highlighterDisposer = null;
-         this._isEditorDisposed = true;
-         this._isHighlightBoundToModelContentChanges = false;
-      });
-      return () => {
+      const onDispose = () => {
          this.resetState();
          this.resetDeltaDecorations();
-         if (this._isEditorDisposed ||
+         if (
             !this._isHighlightBoundToModelContentChanges
          ) {
             return;
          }
-         highlighterDisposer.dispose();
+         this._isHighlightBoundToModelContentChanges = false;
+         highlighterDisposer && highlighterDisposer.dispose();
+         highlighterDisposer = null;
+         
+      }
+      
+      this.monacoEditor.onDidDispose(() => {
+         this.resetDeltaDecorations();
          highlighterDisposer = null;
          this._isHighlightBoundToModelContentChanges = false;
-      };
+      });
+      return;
    };
    
    highlightCode = (
@@ -656,39 +661,22 @@ class MonacoJSXHighlighter {
       );
    };
    
-   executeEditorEdits = (
-      range,
-      text,
-      editor = this.monacoEditor,
-      identifier = {major: 1, minor: 1},
-      forceMoveMarkers = true,
-      commandId = "jsx-comment-edit",
-   ) => {
-      const op = {
-         identifier: {major: 1, minor: 1},
-         range,
-         text,
-         forceMoveMarkers,
-      };
-      editor.executeEdits(commandId, [op]);
-   };
-   
    addJSXCommentCommand = (
       getAstPromise = this.getAstPromise,
       onJsCodeShiftErrors = error => error,
-      editor = this.monacoEditor,
    ) => {
-      this._isGetJSXCommentActive = true;
-      this.runDefaultMonacoCommentAction = () => {
-         editor.getAction(this.commentActionId).run();
-         this.resetState();
-      };
+      const editor = this.monacoEditor;
+      
+      if(this._editorCommandId){
+         this._isJSXCommentCommandActive = true;
+         return this.editorCommandOnDispose;
+      }
       
       this._editorCommandId = editor.addCommand(
          monaco.KeyMod.CtrlCmd | monaco.KeyCode.US_SLASH,
          () => {
-            if (!this._isGetJSXCommentActive) {
-               editor.getAction(this.commentActionId).run();
+            if (!this._isJSXCommentCommandActive) {
+               editor.getAction(COMMENT_ACTION_ID).run();
                return;
             }
             const selection = editor.getSelection();
@@ -703,7 +691,8 @@ class MonacoJSXHighlighter {
             const jsCommentText = model.getValueInRange(jsCommentRange);
             
             if (jsCommentText.match(/^\s*\/[\/\*]/)) {
-               this.runDefaultMonacoCommentAction();
+               editor.getAction(COMMENT_ACTION_ID).run();
+               this.resetState();
                return;
             }
             
@@ -736,7 +725,8 @@ class MonacoJSXHighlighter {
                
                if (commentContext !== JSXCommentContexts.JSX
                   && !isUnCommentAction) {
-                  this.runDefaultMonacoCommentAction();
+                  editor.getAction(COMMENT_ACTION_ID).run();
+                  this.resetState();
                   return;
                }
                
@@ -767,7 +757,6 @@ class MonacoJSXHighlighter {
                }
                editOperations.length &&
                editor.executeEdits(this._editorCommandId, editOperations);
-               /*commandActionId*/
             };
             
             this.runJSXCommentContextAndAction(
@@ -779,14 +768,15 @@ class MonacoJSXHighlighter {
             ).catch(onJsCodeShiftErrors);
          });
       
-      this.monacoEditor.onDidDispose(() => {
-         this._isEditorDisposed = true;
-         this._isGetJSXCommentActive = false;
-      });
+      this.editorCommandOnDispose = () => {
+         this._isJSXCommentCommandActive = false;
+      };
       
-      return () => {
-         this._isGetJSXCommentActive = false;
-      }
+      this._isJSXCommentCommandActive = true;
+      
+      editor.onDidDispose(this.editorCommandOnDispose);
+      
+      return this.editorCommandOnDispose;
    }
 }
 
