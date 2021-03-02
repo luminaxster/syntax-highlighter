@@ -4,7 +4,7 @@ An extensible library to highlight (and comment) JSX syntax in the Monaco Editor
 using Babel. It exposes its AST after it does its magic, so you can add your own
 syntax-based or custom highlights.
 
-![monaco-jsx-highlighter demo](./msh_demo.gif)
+![monaco-jsx-highlighter demo](https://github.com/luminaxster/syntax-highlighter/blob/demo_file/msh_demo.gif)
 ```sh
 # with npm (assuming you are already using monaco-editor)
   npm i @babel/parser @babel/traverse monaco-jsx-highlighter
@@ -190,7 +190,7 @@ monacoJSXHighlighter.highlightCode(
         afterHighlight, //default: ast=>ast
         onError, // default: error=>console.error(error)
         getAstPromise, // default:  parse(monacoEditor.getValue())
-        onJsCodeShiftErrors, // default: error=>error
+        onParseErrors, // default: error=>error
 );
 ```
 
