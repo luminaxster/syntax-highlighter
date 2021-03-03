@@ -46,6 +46,8 @@ function getMonacoEditor(){
 }
 ```
 
+## NL;PR
+
 ## New in v1.x
 
 - Babel is now used directly instead of via JsCodeShift.
@@ -57,7 +59,7 @@ function getMonacoEditor(){
 
 ### Breaking Changes
 
-If you have used 0.x versions, you'll notice JsCodeShift has been replaced by
+If you have used 0.x versions, you'll notice JsCodeShift has been replaced with
 Babel:
 
 ```diff
@@ -78,8 +80,8 @@ This only affects the constructor signature:
  );
 ```
 
-Also, `monacoJSXHighlighter.highLightOnDidChangeModelContent` method now has a
-debounce time as first parameter on its signature:
+Also, `monacoJSXHighlighter.highLightOnDidChangeModelContent` method now has an
+optional debounce time as first parameter on its signature:
 
 ```diff
 monacoJSXHighlighter.highLightOnDidChangeModelContent(
@@ -87,8 +89,6 @@ monacoJSXHighlighter.highLightOnDidChangeModelContent(
 + debounceTime: number, afterHighlight: func,
  ...)
 ```
-
-## NL;PR
 
 ### Dependencies
 
