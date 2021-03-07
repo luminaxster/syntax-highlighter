@@ -354,9 +354,6 @@ export const JSXCommentContexts = {
 export const COMMENT_ACTION_ID = "editor.action.commentLine";
 
 class MonacoJSXHighlighter {
-   _isHighlightBoundToModelContentChanges = false;
-   _isJSXCommentCommandActive = false;
-   
    constructor(
       monacoRef,
       parseRef,
@@ -364,9 +361,26 @@ class MonacoJSXHighlighter {
       monacoEditor,
       options = {},
    ) {
+      this.resetState = this.resetState.bind(this);
+      this.resetDeltaDecorations = this.resetDeltaDecorations.bind(this);
+      this.getAstPromise = this.getAstPromise.bind(this);
+      this.highLightOnDidChangeModelContent =
+         this.highLightOnDidChangeModelContent.bind(this);
+      this.highlightCode = this.highlightCode.bind(this);
+      this.highlight = this.highlight.bind(this);
+      this.createDecoratorsByType = this.createDecoratorsByType.bind(this);
+      this.createJSXElementDecorators =
+         this.createJSXElementDecorators.bind(this);
+      this.extractAllDecorators = this.extractAllDecorators.bind(this);
+      this.getJSXContext = this.getJSXContext.bind(this);
+      this.runJSXCommentContextAndAction =
+         this.runJSXCommentContextAndAction.bind(this);
+      
       monaco = monacoRef;
       parse = parseRef;
       traverse = traverseRef;
+      this._isHighlightBoundToModelContentChanges = false;
+      this._isJSXCommentCommandActive = false;
       this.options = {...defaultOptions, ...options};
       const {parserType} = this.options;
       this.locToMonacoRange = configureLocToMonacoRange(monaco, parserType);
@@ -390,42 +404,46 @@ class MonacoJSXHighlighter {
       );
    }
    
-   getAstPromise = forceUpdate => new Promise((resolve) => {
-      if (
-         forceUpdate ||
-         !this.editorValue ||
-         this.editorValue !== this.prevEditorValue
-      ) {
-         this.prevEditorValue = this.editorValue;
-         this.editorValue = this.monacoEditor.getValue();
-         try {
-            this.ast = parse(this.editorValue);
-         } catch (e) {
+   getAstPromise(forceUpdate) {
+      return (
+         new Promise((resolve) => {
             if (
-               e instanceof SyntaxError &&
-               !e.message.includes('JSX')
+               forceUpdate ||
+               !this.editorValue ||
+               this.editorValue !== this.prevEditorValue
             ) {
-               this.resetState();
-               throw e;
-            } else {
-               if (this.options.isThrowJSXParseErrors) {
-                  throw e;
-               } else {
-                  resolve(this.ast);
+               this.prevEditorValue = this.editorValue;
+               this.editorValue = this.monacoEditor.getValue();
+               try {
+                  this.ast = parse(this.editorValue);
+               } catch (e) {
+                  if (
+                     e instanceof SyntaxError &&
+                     !e.message.includes('JSX')
+                  ) {
+                     this.resetState();
+                     throw e;
+                  } else {
+                     if (this.options.isThrowJSXParseErrors) {
+                        throw e;
+                     } else {
+                        resolve(this.ast);
+                     }
+                  }
                }
             }
-         }
-      }
-      resolve(this.ast);
-   });
+            resolve(this.ast);
+         })
+      );
+   }
    
-   highLightOnDidChangeModelContent = (
+   highLightOnDidChangeModelContent(
       debounceTime = 100,
       afterHighlight = ast => ast,
       onHighlightError = error => console.error(error),
       getAstPromise = this.getAstPromise,
       onParseAstError = error => console.log(error),
-   ) => {
+   ) {
       const highlightCallback = () => {
          this.highlightCode(
             afterHighlight,
@@ -472,31 +490,36 @@ class MonacoJSXHighlighter {
       return onDispose;
    };
    
-   highlightCode = (
+   highlightCode(
       afterHighlight = ast => ast,
       onError = error => console.error(error),
       getAstPromise = this.getAstPromise,
       onJsParserErrors = error => error,
-   ) =>
-      (
-         getAstPromise()
-            .then(ast => this.highlight(ast))
-            .catch(onJsParserErrors)
-      )
-         .then(afterHighlight)
-         .catch(onError);
+   ) {
+      return (
+         (
+            getAstPromise()
+               .then(ast => this.highlight(ast))
+               .catch(onJsParserErrors)
+         )
+            .then(afterHighlight)
+            .catch(onError)
+      );
+   }
    
-   highlight = (ast, jsxTraverseAst = _jsxTraverseAst) => {
-      return new Promise((resolve) => {
-         if (ast) {
-            this.jsxManager = jsxTraverseAst(ast);
-            this.decorators = this.extractAllDecorators(this.jsxManager);
-         }
-         resolve(ast);
-      });
-   };
+   highlight(ast, jsxTraverseAst = _jsxTraverseAst) {
+      return (
+         new Promise((resolve) => {
+            if (ast) {
+               this.jsxManager = jsxTraverseAst(ast);
+               this.decorators = this.extractAllDecorators(this.jsxManager);
+            }
+            resolve(ast);
+         })
+      );
+   }
    
-   createDecoratorsByType = (
+   createDecoratorsByType(
       jsxManager,
       jsxType,
       jsxTypeOptions,
@@ -504,7 +527,7 @@ class MonacoJSXHighlighter {
       decorators = [],
       highlighterOptions = this.options,
       locToMonacoRange = this.locToMonacoRange,
-   ) => {
+   ) {
       jsxManager && jsxManager.find(jsxType)
          .forEach(path => HIGHLIGHT_MODE[highlightScope](
             path,
@@ -516,14 +539,14 @@ class MonacoJSXHighlighter {
          );
       
       return decorators;
-   };
+   }
    
-   createJSXElementDecorators = (
+   createJSXElementDecorators(
       jsxManager,
       decorators = [],
       highlighterOptions = this.options,
       locToMonacoRange = this.locToMonacoRange
-   ) => {
+   ) {
       jsxManager && jsxManager
          .findJSXElements()
          .forEach(path => HIGHLIGHT_MODE.ELEMENT(
@@ -534,9 +557,9 @@ class MonacoJSXHighlighter {
             locToMonacoRange
          ));
       return decorators;
-   };
+   }
    
-   extractAllDecorators = (jsxManager = this.jsxManager) => {
+   extractAllDecorators(jsxManager = this.jsxManager) {
       const decorators = this.createJSXElementDecorators(jsxManager);
       for (const jsxType in JSXTypes) {
          this.createDecoratorsByType(
@@ -556,12 +579,12 @@ class MonacoJSXHighlighter {
       return decorators;
    }
    
-   getJSXContext = (
+   getJSXContext(
       selection,
       ast,
       monacoEditor = this.monacoEditor,
       locToMonacoRange = this.locToMonacoRange
-   ) => {
+   ) {
       let jsxManager = ast ? this.jsxManager : null;
       if (!this._isHighlightBoundToModelContentChanges) {
          jsxManager = ast ? _jsxTraverseAst(ast) : null;
@@ -620,54 +643,56 @@ class MonacoJSXHighlighter {
       } else {
          return JSXCommentContexts.JSX;
       }
-   };
+   }
    
-   runJSXCommentContextAndAction = (
+   runJSXCommentContextAndAction(
       selection,
       getAstPromise = this.getAstPromise,
       onJsCodeShiftErrors = error => error,
       editor = this.monacoEditor,
       runJsxCommentAction
-   ) => {
-      return new Promise((resolve) => {
-            if (this._isHighlightBoundToModelContentChanges) {
-               resolve(
-                  runJsxCommentAction(
-                     this.getJSXContext(selection, this.ast, editor)
-                  )
-               );
-            } else {
-               getAstPromise().then(ast => {
-                     resolve(
-                        runJsxCommentAction(
-                           this.getJSXContext(selection, ast, editor)
-                        )
-                     );
-                  })
-                  .catch(
-                     (error) => resolve(
-                        runJsxCommentAction(
-                           this.getJSXContext(selection, null, editor)
-                        )
-                     ) || onJsCodeShiftErrors(error)
-                  )
+   ) {
+      return (
+         new Promise((resolve) => {
+               if (this._isHighlightBoundToModelContentChanges) {
+                  resolve(
+                     runJsxCommentAction(
+                        this.getJSXContext(selection, this.ast, editor)
+                     )
+                  );
+               } else {
+                  getAstPromise().then(ast => {
+                        resolve(
+                           runJsxCommentAction(
+                              this.getJSXContext(selection, ast, editor)
+                           )
+                        );
+                     })
+                     .catch(
+                        (error) => resolve(
+                           runJsxCommentAction(
+                              this.getJSXContext(selection, null, editor)
+                           )
+                        ) || onJsCodeShiftErrors(error)
+                     )
+               }
             }
-         }
-      ).catch(error => (
-            runJsxCommentAction(
-               this.getJSXContext(selection, null, editor))
-            || onJsCodeShiftErrors(error)
+         ).catch(error => (
+               runJsxCommentAction(
+                  this.getJSXContext(selection, null, editor))
+               || onJsCodeShiftErrors(error)
+            )
          )
       );
-   };
+   }
    
-   addJSXCommentCommand = (
+   addJSXCommentCommand(
       getAstPromise = this.getAstPromise,
       onJsCodeShiftErrors = error => error,
-   ) => {
+   ) {
       const editor = this.monacoEditor;
       
-      if(this._editorCommandId){
+      if (this._editorCommandId) {
          this._isJSXCommentCommandActive = true;
          return this.editorCommandOnDispose;
       }
