@@ -1,3 +1,4 @@
+// now using rollup
 const path  = require('path');
 
 module.exports = function (env) {
@@ -7,9 +8,11 @@ module.exports = function (env) {
       mode: devMode ? 'development' : 'production',
       entry: path.resolve(__dirname, 'src/index.js'),
       output: {
-         path: path.resolve(__dirname, 'dist'),
-         filename: 'index.js',
-         library: '$',
+         path: path.resolve(__dirname, 'build'),
+         publicPath: 'build/',
+         filename: 'monaco-jsx-highlighter.js',
+         sourceMapFilename: 'monaco-jsx-highlighter.map',
+         library: 'MonacoJSXHighlighter',
          libraryTarget: 'umd',
       },
       module: {

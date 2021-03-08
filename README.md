@@ -1,4 +1,6 @@
 # monaco-jsx-highlighter
+[![npm version](https://img.shields.io/npm/v/monaco-jsx-highlighter.svg?style=flat-square)](https://www.npmjs.com/package/monaco-jsx-highlighter)
+[![npm downloads](https://img.shields.io/npm/dm/monaco-jsx-highlighter.svg?style=flat-square)](https://www.npmjs.com/package/monaco-jsx-highlighter)
 
 An extensible library to highlight (and comment) JSX syntax in the Monaco Editor
 using Babel. It exposes its AST after it does its magic, so you can add your own

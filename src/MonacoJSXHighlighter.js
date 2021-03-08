@@ -63,7 +63,7 @@ export function makeJSXTraverse() {
       findJSXElements,
       jsxTraverse
    };
-};
+}
 
 function _jsxTraverseAst(ast, _traverse = traverse) {
    const jsxManager = makeJSXTraverse();
@@ -162,7 +162,7 @@ export const HIGHLIGHT_MODE = {
       }
       
       highlighterOptions.isHighlightGlyph && decorators.push({
-         range: this.locToMonacoRange(loc),
+         range: locToMonacoRange(loc),
          options: JSXTypes.JSXElement.options(elementName),
       });
    },
@@ -489,7 +489,7 @@ class MonacoJSXHighlighter {
          this._isHighlightBoundToModelContentChanges = false;
       });
       return onDispose;
-   };
+   }
    
    highlightCode(
       afterHighlight = ast => ast,
@@ -726,7 +726,7 @@ class MonacoJSXHighlighter {
             );
             const jsCommentText = model.getValueInRange(jsCommentRange);
             
-            if (jsCommentText.match(/^\s*\/[\/\*]/)) {
+            if (jsCommentText.match(/^\s*\/[/*]/)) {
                editor.getAction(COMMENT_ACTION_ID).run();
                this.resetState();
                return;
