@@ -5,10 +5,11 @@ module.exports = function (env) {
    
    return {
       mode: devMode ? 'development' : 'production',
-      entry: './src/index.js',
+      entry: path.resolve(__dirname, 'src/index.js'),
       output: {
          path: path.resolve(__dirname, 'dist'),
          filename: 'index.js',
+         library: '$',
          libraryTarget: 'umd',
       },
       module: {
@@ -22,7 +23,7 @@ module.exports = function (env) {
                      presets: [
                         '@babel/preset-env',
                         '@babel/preset-react',
-                     ],
+                     ]
                   }
                }
             },
@@ -47,7 +48,7 @@ module.exports = function (env) {
          ],
       },
       resolve: {
-         extensions: ['.js'],
+         extensions: ['.js']
       },
    }
 };
