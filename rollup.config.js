@@ -7,7 +7,7 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import babel from 'rollup-plugin-babel';
 import commonjs from 'rollup-plugin-commonjs';
 import cleanup from 'rollup-plugin-cleanup';
-import css from "rollup-plugin-import-css";
+import postcss from "rollup-plugin-postcss";
 import {terser} from 'rollup-plugin-terser';
 
 const isProduction = true;
@@ -34,7 +34,7 @@ export default [
          ],
       external: ['is-dom', 'prop-types', 'react'],
       plugins: [
-         css({minify: isProduction}),
+         postcss({minimize: isProduction}),
          nodeResolve({
             mainFields: ['module', 'jsnext:main', 'main'],
          }),
@@ -68,7 +68,7 @@ export default [
          ],
       external: ['is-dom', 'prop-types', 'react'],
       plugins: [
-         css({minify: isProduction}),
+         postcss({minimize: isProduction}),
          nodeResolve({
             mainFields: ['module', 'jsnext:main', 'main'],
          }),
@@ -102,7 +102,7 @@ export default [
             }
          ],
       plugins: [
-         css({minify: isProduction}),
+         postcss({minimize: isProduction}),
          nodeResolve({
             mainFields: ['module', 'jsnext:main', 'main'],
          }),

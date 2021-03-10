@@ -1,4 +1,7 @@
 src/
+build/
+.eslintrc.js
 .gitignore
-webpack.config.js
 _config.yml
+rollup.config.js
+webpack.config.js

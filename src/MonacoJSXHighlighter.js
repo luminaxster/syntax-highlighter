@@ -1,3 +1,5 @@
+import './MonacoJSXHighlighter.css';
+
 let monaco = null, parse = null, traverse = null;
 
 const defaultOptions = {
