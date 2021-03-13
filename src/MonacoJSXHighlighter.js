@@ -362,7 +362,7 @@ class MonacoJSXHighlighter {
       parseRef,
       traverseRef,
       monacoEditor,
-      options = {},
+      options = {ownerId: 20190313},
    ) {
       this.resetState = this.resetState.bind(this);
       this.resetDeltaDecorations = this.resetDeltaDecorations.bind(this);
@@ -401,9 +401,10 @@ class MonacoJSXHighlighter {
    
    resetDeltaDecorations() {
       this.JSXDecoratorIds = (this.monacoEditor &&
-         this.monacoEditor.deltaDecorations(
+         this.monacoEditor.getModel().deltaDecorations(
             this.JSXDecoratorIds || [],
             [],
+            this.options.ownerId
          )
       );
    }
@@ -577,9 +578,10 @@ class MonacoJSXHighlighter {
       }
       
       this.JSXDecoratorIds =
-         this.monacoEditor.deltaDecorations(
+         this.monacoEditor.getModel().deltaDecorations(
             this.JSXDecoratorIds || [],
             decorators,
+            this.options.ownerId
          );
       return decorators;
    }
