@@ -460,15 +460,27 @@ class MonacoJSXHighlighter {
       
       let tid = null;
       
-      let highlighterDisposer = this.monacoEditor.onDidChangeModelContent(
-         () => {
-            clearTimeout(tid);
-            setTimeout(
-               highlightCallback,
-               debounceTime
-            );
-         }
-      );
+      let highlighterDisposer = {
+         onDidChangeModelContentDisposer:
+            this.monacoEditor.onDidChangeModelContent(
+               () => {
+                  clearTimeout(tid);
+                  setTimeout(
+                     highlightCallback,
+                     debounceTime
+                  );
+               }),
+         onDidChangeModelDisposer: this.monacoEditor.onDidChangeModel(
+            () => {
+               highlightCallback();
+            })
+      };
+      
+      highlighterDisposer.dispose = () => {
+         highlighterDisposer.onDidChangeModelContentDisposer.dispose();
+         highlighterDisposer.onDidChangeModelDisposer.dispose();
+      };
+      
       this._isHighlightBoundToModelContentChanges = true;
       
       const onDispose = () => {
