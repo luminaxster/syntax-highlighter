@@ -367,8 +367,10 @@ class MonacoJSXHighlighter {
       this.resetState = this.resetState.bind(this);
       this.resetDeltaDecorations = this.resetDeltaDecorations.bind(this);
       this.getAstPromise = this.getAstPromise.bind(this);
+      this.highlightOnDidChangeModelContent =
+         this.highlightOnDidChangeModelContent.bind(this);
       this.highLightOnDidChangeModelContent =
-         this.highLightOnDidChangeModelContent.bind(this);
+         this.highlightOnDidChangeModelContent;
       this.highlightCode = this.highlightCode.bind(this);
       this.highlight = this.highlight.bind(this);
       this.createDecoratorsByType = this.createDecoratorsByType.bind(this);
@@ -439,7 +441,7 @@ class MonacoJSXHighlighter {
       });
    }
    
-   highLightOnDidChangeModelContent(
+   highlightOnDidChangeModelContent(
       debounceTime = 100,
       afterHighlight = ast => ast,
       onHighlightError = error => console.error(error),
@@ -670,7 +672,7 @@ class MonacoJSXHighlighter {
    runJSXCommentContextAndAction(
       selection,
       getAstPromise,
-      onJsCodeShiftErrors = error => error,
+      onParseErrors = error => error,
       editor,
       runJsxCommentAction
    ) {
@@ -697,21 +699,21 @@ class MonacoJSXHighlighter {
                         runJsxCommentAction(
                            this.getJSXContext(selection, null, editor)
                         )
-                     ) || onJsCodeShiftErrors(error)
+                     ) || onParseErrors(error)
                   )
             }
          }
       ).catch(error => (
             runJsxCommentAction(
                this.getJSXContext(selection, null, editor))
-            || onJsCodeShiftErrors(error)
+            || onParseErrors(error)
          )
       );
    }
    
    addJSXCommentCommand(
       getAstPromise,
-      onJsCodeShiftErrors = error => error,
+      onParseErrors = error => error,
       editor
    ) {
       getAstPromise = getAstPromise || this.getAstPromise;
@@ -812,10 +814,10 @@ class MonacoJSXHighlighter {
             this.runJSXCommentContextAndAction(
                selection,
                getAstPromise,
-               onJsCodeShiftErrors,
+               onParseErrors,
                editor,
                runJsxCommentAction
-            ).catch(onJsCodeShiftErrors);
+            ).catch(onParseErrors);
          });
       
       this.editorCommandOnDispose = () => {

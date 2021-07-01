@@ -6,14 +6,14 @@ An extensible library to highlight (and comment) JSX syntax in the Monaco Editor
 using Babel. It exposes its AST after it does its magic, so you can add your own
 syntax-based or custom highlights.
 
-![monaco-jsx-highlighter demo](https://github.com/luminaxster/syntax-highlighter/blob/demo_file/msh_demo.gif)
+## [LIVE DEMO](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js)
+[![monaco-jsx-highlighter demo](https://github.com/luminaxster/syntax-highlighter/blob/demo_file/msh_demo.gif)](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js)
 ```sh
 # with npm (assuming you are already using monaco-editor)
   npm i @babel/parser @babel/traverse monaco-jsx-highlighter
 # with yarn (assuming you are already using monaco-editor)
   yarn add @babel/parser @babel/traverse monaco-jsx-highlighter
 ```
-## [LIVE DEMO](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js)
 
 ## TL;DR
 
@@ -34,7 +34,7 @@ const monacoJSXHighlighter = new MonacoJSXHighlighter(
    monaco, babelParse, traverse, getMonacoEditor()
 );
 // Activate highlighting (debounceTime default: 100ms)
-monacoJSXHighlighter.highLightOnDidChangeModelContent(100);
+monacoJSXHighlighter.highlightOnDidChangeModelContent(100);
 // Activate JSX commenting
 monacoJSXHighlighter.addJSXCommentCommand();
 // Done =)
@@ -55,7 +55,7 @@ function getMonacoEditor(){
 - Babel is now used directly instead of via JsCodeShift.
 - React fragment, spread child, spread attribute, and container expression
   highlighting.
-- highLightOnDidChangeModelContent(debounceTime) method debounces highlight
+- highlightOnDidChangeModelContent(debounceTime) method debounces highlight
   updates.
 - Several defect repairs.
 
@@ -82,11 +82,11 @@ This only affects the constructor signature:
  );
 ```
 
-Also, `monacoJSXHighlighter.highLightOnDidChangeModelContent` method now has an
+Also, `monacoJSXHighlighter.highlightOnDidChangeModelContent` method now has an
 optional debounce time as first parameter on its signature:
 
 ```diff
-monacoJSXHighlighter.highLightOnDidChangeModelContent(
+monacoJSXHighlighter.highlightOnDidChangeModelContent(
 - afterHighlight: func,
 + debounceTime: number, afterHighlight: func,
  ...)
@@ -150,7 +150,7 @@ const monacoJSXHighlighter = new MonacoJSXHighlighter(
    monaco, babelParse, traverse, monacoEditor, defaultOptions
 );
 ```
-The highlight activation method, `monacoJSXHighlighter.highLightOnDidChangeModelContent(debounceTime: number, afterHighlight: func, ...)`
+The highlight activation method, `monacoJSXHighlighter.highlightOnDidChangeModelContent(debounceTime: number, afterHighlight: func, ...)`
 , accepts a callback among other parameters. The callback `afterHighlight`
 passes the AST used to highlight the code. Passing parameters and using the disposer function returned by the call are optional.
 
@@ -159,7 +159,7 @@ passes the AST used to highlight the code. Passing parameters and using the disp
 ```js
 // Optional: Disable highlighting when needed (e.g. toggling, unmounting, pausing)
 const highlighterDisposeFunc = monacoJSXHighlighter.
-   highLightOnDidChangeModelContent(
+   highlightOnDidChangeModelContent(
         100, 
         ast=>{}
    );
