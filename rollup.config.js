@@ -32,7 +32,7 @@ export default [
                plugins: [terser()]
             }
          ],
-      external: ['is-dom', 'prop-types', 'react'],
+      external: ['prop-types', 'react'],
       plugins: [
          postcss({minimize: isProduction}),
          nodeResolve({
@@ -66,7 +66,7 @@ export default [
                plugins: [terser()]
             }
          ],
-      external: ['is-dom', 'prop-types', 'react'],
+      external: ['prop-types', 'react'],
       plugins: [
          postcss({minimize: isProduction}),
          nodeResolve({
