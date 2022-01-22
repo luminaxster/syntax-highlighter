@@ -1,8 +1,10 @@
 module.exports = {
-    "parser": "babel-eslint",
+    "parser": "@babel/eslint-parser",
     "parserOptions": {
+        requireConfigFile: false,
         "ecmaVersion": 8
     },
+    
     "plugins": [
         // "react",
         // "jasmine"
@@ -14,7 +16,7 @@ module.exports = {
     ],
     "env": {
           "browser": true,
-          "node": true,
+          "node": false,
           "es6": true,
           // "jasmine": true
     },

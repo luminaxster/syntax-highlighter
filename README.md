@@ -26,12 +26,13 @@ import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 // Minimal Babel setup for React JSX parsing:
 const babelParse = code => parse(code, {
    sourceType: "module",
-   plugins: ["jsx"]
+   plugins: ["jsx"], 
+   errorRecovery: true, //required for continuous highlighting 
 });
 
 // Instantiate the highlighter
 const monacoJSXHighlighter = new MonacoJSXHighlighter(
-   monaco, babelParse, traverse, getMonacoEditor()
+   monaco, babelParse, traverse, aMonacoEditor()
 );
 // Activate highlighting (debounceTime default: 100ms)
 monacoJSXHighlighter.highlightOnDidChangeModelContent(100);
@@ -39,7 +40,7 @@ monacoJSXHighlighter.highlightOnDidChangeModelContent(100);
 monacoJSXHighlighter.addJSXCommentCommand();
 // Done =)
 
-function getMonacoEditor(){
+function aMonacoEditor(){
   return monaco.editor.create(
           document.getElementById("editor"), {
             value: 'const AB=<A x={d}><B>{"hello"}</B></A>;',
@@ -49,6 +50,19 @@ function getMonacoEditor(){
 ```
 
 ## NL;PR
+
+## New in v2.xx
+- Refactored and commented code for those who want to use the highlighting or commenting APIs separately.
+- All utils and core API are exposed.
+- Several defect repairs (no console pollution or highlight breaking on code changes).
+
+### Breaking Changes
+- `configureLocToMonacoRange` has been renamed to `configureLoc2Range`.
+- `afterHighlight` returns an object containing the ast instead of the ast object:
+```diff
+- afterHighlight(ast)
++ afterHighlight({ast, ...rest})
+```
 
 ## New in v1.x
 
@@ -73,7 +87,7 @@ Babel:
 This only affects the constructor signature:
 
 ```diff
-+ const babelParse = code => parse(code, {sourceType: "module", plugins: ["jsx"]});
++ const babelParse = code => parse(code, {sourceType: "module", plugins: ["jsx"],  errorRecovery: true,});
  const monacoJSXHighlighter = new MonacoJSXHighlighter(
   monaco,
 - j,
@@ -94,8 +108,7 @@ monacoJSXHighlighter.highlightOnDidChangeModelContent(
 
 ### Dependencies
 
-It requires [`monaco-editor`](https://www.npmjs.com/package/monaco-editor)
-, [`@babel/parser`](https://www.npmjs.com/package/@babel/parser)
+It requires [`monaco-editor`](https://www.npmjs.com/package/monaco-editor), [`@babel/parser`](https://www.npmjs.com/package/@babel/parser)
 and [`@babel/traverse`](https://www.npmjs.com/package/@babel/traverse), for
 convenience, they are listed as peer dependencies and passed by reference (so
 you can do lazy loading). Please install them before `monaco-jsx-highlighter`;
@@ -118,23 +131,6 @@ Install the package in your project directory with:
  yarn add @babel/traverse
  yarn add monaco-jsx-highlighter
 ```
-
-### Replacing CSS classes with your own
-
-```js
-import {JSXTypes} from 'monaco-jsx-highlighter';
-// JSXTypes:JSX Syntax types and their CSS classnames.
-// Customize the color font in JSX texts:  .myCustomCSS {color: red;}
-JSXTypes.JSXText.options.inlineClassName = "myCustomCSS";
-```
-
-### Overriding CSS classes
-
-Take a look of
-the [`src/JSXColoringProvider.css` file](https://github.com/luminaxster/syntax-highlighter/blob/master/src/MonacoJSXHighlighter.css)
-and override the CSS classes you need. Make sure to import your customization
-CSS files after you import `monaco-jsx-highlighter`.
-
 ### Advanced Usage
 After your have a Monaco JSX Highlighter instance, `monacoJSXHighlighter`:
 ```js
@@ -143,7 +139,11 @@ const defaultOptions = {
   isHighlightGlyph: false, // if JSX elements should decorate the line number gutter
   iShowHover: false, // if JSX types should  tooltip with their type info
   isUseSeparateElementStyles: false, // if opening elements and closing elements have different styling
-  isThrowJSXParseErrors: false, // Only JSX Syntax Errors are not thrown by default when parsing, true will throw like any other parsign error
+  // you can pass your own custom APIs, check core/ and uitls/ for more details
+  monacoEditorManager: null,
+  decoratorMapper: null,
+  jsxCommenter: null,
+
 };
 
 const monacoJSXHighlighter = new MonacoJSXHighlighter(
@@ -152,7 +152,7 @@ const monacoJSXHighlighter = new MonacoJSXHighlighter(
 ```
 The highlight activation method, `monacoJSXHighlighter.highlightOnDidChangeModelContent(debounceTime: number, afterHighlight: func, ...)`
 , accepts a callback among other parameters. The callback `afterHighlight`
-passes the AST used to highlight the code. Passing parameters and using the disposer function returned by the call are optional.
+passes the AST used to highlight the code as well other inner objects. Passing parameters and using the disposer function returned by the call are optional.
 
 **Note:** The disposer is always called when the editor is disposed.
 
@@ -181,21 +181,41 @@ monacoEditor.onDidChangeModelContent(() => {
 monacoJSXHighlighter.highlightCode();
 // or customize its behavior by adding custom highlighting after the JSX highlighting
 const afterHighlight = (
-        ast // the ast generate by  Babel
+        {
+          decoratorMapper,
+          options,
+          ast, // the ast generate by  Babel
+          jsxExpressions
+        } 
 ) => {
   //... your customization code, check Babel for more info about AST types
-  //optional: array with the decorators created by the highlighter, push your decorator ids to this array
-  monacoJSXHighlighter.JSXDecoratorIds.push(...yourdecoratorsIds);
 };
 
-monacoJSXHighlighter.highlightCode(
-        afterHighlight, //default: ast=>ast
-        onError, // default: error=>console.error(error)
-        getAstPromise, // default:  parse(monacoEditor.getValue())
-        onParseErrors, // default: error=>error
+monacoJSXHighlighter.highlightCode( // defaults
+        afterHighlight, // ast => ast,
+        onHighlightError, // error => error,
+        getAstPromise, // this.getAstPromise,
+        onGetAstErrors, // error => error,
 );
 ```
 
+#### Replacing CSS classes with your own
+
+```js
+import {JSXTypes} from 'monaco-jsx-highlighter';
+// JSXTypes:JSX Syntax types and their CSS classnames.
+// Customize the color font in JSX texts:  .myCustomCSS {color: red;}
+JSXTypes.JSXText.options.inlineClassName = "myCustomCSS";
+```
+
+#### Overriding CSS classes
+
+Take a look of
+the [`src/JSXColoringProvider.css` file](https://github.com/luminaxster/syntax-highlighter/blob/master/src/MonacoJSXHighlighter.css)
+and override the CSS classes you need. Make sure to import your customization
+CSS files after you import `monaco-jsx-highlighter`.
+
+#### JSX Commenting
 Additionally, you can add JSX commenting to your monaco editor with
 `monacoJSXHighlighter.addJSXCommentCommand()`:
 comments in JSX children will result in `{/*...*/}` instead of `//...`. It mimics the commenting behavior of
@@ -209,11 +229,49 @@ const commentDisposeFunc = monacoJSXHighlighter.addJSXCommentCommand();
 commentDisposeFunc(); // if you need to
 ```
 
-### Creating Monaco compatible ranges from Babel
+#### Standalone JSX Commenting
+If you only need the commenting feature, try this:
+```js
+import {makeJSXCommenterBundle} from 'monaco-jsx-highlighter';
+const [
+         jsxCommenter, monacoEditorManager,
+         parseJSXExpressionsPromise, getAstPromise,
+         loc2Range, range2Loc
+      ] = makeJSXCommenterBundle(
+         monaco, parse, traverse, monacoEditor,
+      );
+const commentDisposeFunc = jsxCommenter.addJSXCommentCommand();
+commentDisposeFunc(); // if you need to
+```
+Works same as before, all other objects are exposed if you need them.
+
+#### Creating Monaco compatible ranges from Babel
 
 ```js
-import {configureLocToMonacoRange} from 'monaco-jsx-highlighter';
-// locToMonacoRange: converts Babel locations to Monaco Ranges
-const locToMonacoRange = configureLocToMonacoRange(monaco);
-const monacoRange = locToMonacoRange(babelAstNode.loc);
+import {configureLoc2Range} from 'monaco-jsx-highlighter';
+// configureLoc2Range: converts Babel locations to Monaco Ranges
+const loc2Range = configureLoc2Range(monaco);
+const monacoRange = loc2Range(babelAstNode.loc);
+```
+### TroubleShooting
+If you are using Next or `@monaco-editor/react`, and you get and error like this:
+```
+ReferenceError: document is not defined
+```
+
+You are instantiating the higlighter before your whole app is rendered, or Monaco has finished setting up.
+The [live demo](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js) uses `@monaco-editor/react`, you can check it for more details.
+For Next,js, try:
+```js
+import dynamic from "next/dynamic";
+let  jsxHighlighter = null;
+const HighlighterComponent = dynamic(()=>{
+  
+  import("monaco-jsx-highlighter").then((allMonacoSyntaxHighlighter)=>{
+  jsxHighlighter=allMonacoSyntaxHighlighter.default;
+  console.log(jsxHighlighter);
+});
+
+ return null;
+}, { ssr: false });
 ```
