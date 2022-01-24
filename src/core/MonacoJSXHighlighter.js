@@ -112,7 +112,9 @@ class MonacoJSXHighlighter {
          decoratorMapper.reset()
       };
       
-      this.highlight = (ast) => {
+      this.highlight = (
+         ast, _collectJSXExpressions = collectJSXExpressions
+      ) => {
          return new Promise((resolve, reject) => {
             const {decoratorMapper, options} = this;
             const result = {
@@ -128,7 +130,7 @@ class MonacoJSXHighlighter {
             }
             
             try {
-               const jsxExpressions = collectJSXExpressions(ast, traverse);
+               const jsxExpressions = _collectJSXExpressions(ast, traverse);
                
                decoratorMapper.deltaJSXDecorations(
                   jsxExpressions, options
@@ -236,5 +238,5 @@ class MonacoJSXHighlighter {
          this.highlightOnDidChangeModelContent;
    }
 }
-
+// .polyfilled dist .babelrc.json: {"presets": "@babel/preset-env"}
 export default MonacoJSXHighlighter;

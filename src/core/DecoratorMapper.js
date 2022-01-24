@@ -1,14 +1,22 @@
-import {BabelDataExtractor} from "../utils/babel";
+import {
+   extractJSXOpeningElement,
+   extractJSXClosingElement,
+   getLoc,
+   getCuratedLoc,
+   isJSXIdentifier,
+   isParentJSXAttribute,
+   extractJSXExpressionEdges
+} from "../utils/babel";
 
-export function prepareOptions(
+export const prepareOptions =(
    path,
    jsxTypeOptions = {},
    highlighterOptions = {}
-) {
+) =>{
    return highlighterOptions.iShowHover ?
       {...jsxTypeOptions, ...{hoverMessage: `(${path.type})`}}
       : jsxTypeOptions;
-}
+};
 
 export const HIGHLIGHT_TYPE = {
    ELEMENT: 'ELEMENT', // jsx elements
@@ -40,7 +48,7 @@ export const HIGHLIGHT_MODE = {
    ) => {
       const [
          openingElement, elementName, startLoc, endLoc
-      ] = BabelDataExtractor.extractJSXOpeningElement(path);
+      ] = extractJSXOpeningElement(path);
       
       const result = [];
       
@@ -62,7 +70,7 @@ export const HIGHLIGHT_MODE = {
       
       const [
          closingElement, , closingElementStartLoc, closingElementEndLoc
-      ] = BabelDataExtractor.extractJSXClosingElement(path);
+      ] = extractJSXClosingElement(path);
       
       if (closingElement) {
          result.push([
@@ -79,7 +87,7 @@ export const HIGHLIGHT_MODE = {
          ]);
       }
       
-      const loc = BabelDataExtractor.getLoc(path);
+      const loc = getLoc(path);
       highlighterOptions.isHighlightGlyph && result.push([
          loc,
          JSXTypes.JSXElement.options(elementName)
@@ -91,7 +99,7 @@ export const HIGHLIGHT_MODE = {
       jsxTypeOptions,
       highlighterOptions,
    ) => {
-      const curatedLoc = BabelDataExtractor.getCuratedLoc(path);
+      const curatedLoc = getCuratedLoc(path);
       const result = [];
       curatedLoc && result.push([
          curatedLoc,
@@ -104,13 +112,13 @@ export const HIGHLIGHT_MODE = {
       jsxTypeOptions,
       highlighterOptions,
    ) => {
-      if (!BabelDataExtractor.isJSXIdentifier(path)) {
+      if (!isJSXIdentifier(path)) {
          return [];
       }
       
       return HIGHLIGHT_MODE[HIGHLIGHT_TYPE.ALL](
          path,
-         BabelDataExtractor.isParentJSXAttribute(path) ?
+         isParentJSXAttribute(path) ?
             JSXTypes.JSXAttribute.options : jsxTypeOptions,
          highlighterOptions,
       );
@@ -124,7 +132,7 @@ export const HIGHLIGHT_MODE = {
       
       const [
          , , startEdgeLoc, endEdgeLoc
-      ] = BabelDataExtractor.extractJSXExpressionEdges(path);
+      ] = extractJSXExpressionEdges(path);
       
       const result = [];
       

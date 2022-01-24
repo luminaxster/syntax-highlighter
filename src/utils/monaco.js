@@ -1,7 +1,9 @@
+export const COMMENT_ACTION_ID = "editor.action.commentLine";
+
 // adapts location objects (e.g. Babel uses internally Acorn) to Monaco Ranges
-export function configureLoc2Range(
+export const configureLoc2Range = (
    monaco, parserType = 'babel'
-) {
+) => {
    switch (parserType) {
       case 'babel':
       default:
@@ -32,11 +34,11 @@ export function configureLoc2Range(
             );
          };
    }
-}
+};
 
-export function configureRange2Loc(
+export const configureRange2Loc = (
    parserType = 'babel'
-) {
+) => {
    switch (parserType) {
       case 'babel':
       default:
@@ -76,78 +78,76 @@ export function configureRange2Loc(
             return loc;
          };
    }
-}
+};
 
 export class MonacoEditorManager {
-   static COMMENT_ACTION_ID = "editor.action.commentLine";
-   
    constructor(monacoEditor, monaco, loc2Range) {
       this.monacoEditor = monacoEditor;
       this.monaco = monaco;
-      this.loc2Range = loc2Range;
-   }
-   
-   // default editor comment action
-   runEditorCommentLineAction = () => {
-      return this.monacoEditor
-         .getAction(MonacoEditorManager.COMMENT_ACTION_ID)
-         .run();
-   }
-   
-   // preserves indentation when commenting code
-   getLineIndentationColumn = (lineNumber) => {
-      return this.monacoEditor
-         .getModel()
-         .getLineFirstNonWhitespaceColumn(
-            lineNumber
-         );
-   }
-   
-   getCommentableStartingRange = (range) => {
-      const startColumn = this.getLineIndentationColumn(
-         range.startLineNumber
-      );
+      this.loc2Range = loc2Range || configureRange2Loc(monaco);
       
-      // creates an anchor to check for comments
-      const commentableRange = new this.monaco.Range(
-         range.startLineNumber,
-         startColumn,
-         range.startLineNumber,
-         startColumn,
-      );
+      // default editor comment action
+      this.runEditorCommentLineAction = () => {
+         return this.monacoEditor
+            .getAction(COMMENT_ACTION_ID)
+            .run();
+      };
       
-      return commentableRange;
-   }
-   
-   getCommentContainingStartingRange = (range) => {
       // preserves indentation when commenting code
-      let startColumn = this.getLineIndentationColumn(
-         range.startLineNumber
-      );
+      this.getLineIndentationColumn = (lineNumber) => {
+         return this.monacoEditor
+            .getModel()
+            .getLineFirstNonWhitespaceColumn(
+               lineNumber
+            );
+      };
       
-      startColumn = startColumn ? startColumn - 1 : 0;
-      const containingRange = new this.monaco.Range(
-         range.startLineNumber,
-         startColumn,
-         range.startLineNumber,
-         startColumn,
-      );
+      this.getCommentableStartingRange = (range) => {
+         const startColumn = this.getLineIndentationColumn(
+            range.startLineNumber
+         );
+         
+         // creates an anchor to check for comments
+         const commentableRange = new this.monaco.Range(
+            range.startLineNumber,
+            startColumn,
+            range.startLineNumber,
+            startColumn,
+         );
+         
+         return commentableRange;
+      };
       
-      return containingRange;
-   }
-   
-   getSelectionFirstLineText = () => {
-      const model = this.monacoEditor.getModel();
-      const {startLineNumber} = this.monacoEditor.getSelection();
+      this.getCommentContainingStartingRange = (range) => {
+         // preserves indentation when commenting code
+         let startColumn = this.getLineIndentationColumn(
+            range.startLineNumber
+         );
+         
+         startColumn = startColumn ? startColumn - 1 : 0;
+         const containingRange = new this.monaco.Range(
+            range.startLineNumber,
+            startColumn,
+            range.startLineNumber,
+            startColumn,
+         );
+         
+         return containingRange;
+      };
       
-      const jsCommentRange = new this.monaco.Range(
-         startLineNumber,
-         this.getLineIndentationColumn(
-            startLineNumber
-         ),
-         startLineNumber,
-         model.getLineMaxColumn(startLineNumber),
-      );
-      return model.getValueInRange(jsCommentRange);
+      this.getSelectionFirstLineText = () => {
+         const model = this.monacoEditor.getModel();
+         const {startLineNumber} = this.monacoEditor.getSelection();
+         
+         const jsCommentRange = new this.monaco.Range(
+            startLineNumber,
+            this.getLineIndentationColumn(
+               startLineNumber
+            ),
+            startLineNumber,
+            model.getLineMaxColumn(startLineNumber),
+         );
+         return model.getValueInRange(jsCommentRange);
+      };
    }
 }
