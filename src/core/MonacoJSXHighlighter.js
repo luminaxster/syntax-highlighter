@@ -238,5 +238,5 @@ class MonacoJSXHighlighter {
          this.highlightOnDidChangeModelContent;
    }
 }
-// .polyfilled dist .babelrc.json: {"presets": "@babel/preset-env"}
+// use .polyfilled dist when usign node < 10. // .babelrc.json:  "node": "0"
 export default MonacoJSXHighlighter;
