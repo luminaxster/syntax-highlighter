@@ -26,16 +26,9 @@ import {parse} from "@babel/parser";
 import traverse from "@babel/traverse";
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 
-// Minimal Babel setup for React JSX parsing:
-const babelParse = code => parse(code, {
-   sourceType: "module",
-   plugins: ["jsx"],
-   errorRecovery: true, //required for continuous highlighting 
-});
-
 // Instantiate the highlighter
 const monacoJSXHighlighter = new MonacoJSXHighlighter(
-   monaco, babelParse, traverse, aMonacoEditor()
+   monaco, babel, traverse, aMonacoEditor()
 );
 // Activate highlighting (debounceTime default: 100ms)
 monacoJSXHighlighter.highlightOnDidChangeModelContent(100);
@@ -57,9 +50,10 @@ function aMonacoEditor() {
 
 ## New in v2.x
 
+- Minified versions are now <12kB (cjs, es, umd).
 - Normal versions are ES2018 compliant.
 - Polyfilled versions (>2.0.2-polyfilled) are available for node users below
-  8.6, they target node 0 versions.
+  8.6, they target node 0.
 - Refactored and commented code for those who want to use the highlighting or
   commenting APIs separately.
 - All utils and core API are exposed.

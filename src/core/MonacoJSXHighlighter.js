@@ -12,9 +12,9 @@ const defaultOptions = {
    isHighlightGlyph: false,
    iShowHover: false,
    isUseSeparateElementStyles: false,
+   jsxCommenter: null,
    monacoEditorManager: null,
    decoratorMapper: null,
-   jsxCommenter: null,
 };
 
 export const makeGetAstPromise = (parse, monacoEditor) => () => {
@@ -76,6 +76,26 @@ export const makeJSXCommenterBundle = (
    ];
 };
 
+// Minimal Babel setup for React JSX parsing:
+export const makeBabelParse = (parse, astRef, onError = e => e) => {
+   astRef.current = null;
+   return (code, options = {}) => {
+      try {
+         astRef.current = parse(
+            code,
+            {
+               ...options,
+               sourceType: "module",
+               plugins: ["jsx"],
+               errorRecovery: true
+            });
+      } catch (e) {
+         onError(e);
+      }
+      return astRef.current;
+   };
+};
+
 class MonacoJSXHighlighter {
    constructor(
       monaco,
@@ -86,18 +106,21 @@ class MonacoJSXHighlighter {
    ) {
       this.options = {...defaultOptions, ...options};
       
-      const {decoratorMapper,} = this.options;
+      const {jsxCommenter, monacoEditorManager, decoratorMapper} = this.options;
+      
+      this.astRef = {};
+      this.babelParse = makeBabelParse(parse, this.astRef);
       
       const [
          _jsxCommenter, _monacoEditorManager,
          parseJSXExpressionsPromise, getAstPromise,
          loc2Range, range2Loc
       ] = makeJSXCommenterBundle(
-         monaco, parse, traverse, monacoEditor, this.options
+         monaco, this.babelParse, traverse, monacoEditor, this.options
       );
       
-      this.jsxCommenter = _jsxCommenter;
-      this.monacoEditorManager = _monacoEditorManager;
+      this.jsxCommenter = jsxCommenter || _jsxCommenter;
+      this.monacoEditorManager = monacoEditorManager || _monacoEditorManager;
       this.parseJSXExpressionsPromise = parseJSXExpressionsPromise;
       this.getAstPromise = getAstPromise;
       this.loc2Range = loc2Range;
@@ -238,5 +261,6 @@ class MonacoJSXHighlighter {
          this.highlightOnDidChangeModelContent;
    }
 }
+
 // use .polyfilled dist when usign node < 10. // .babelrc.json:  "node": "0"
 export default MonacoJSXHighlighter;
