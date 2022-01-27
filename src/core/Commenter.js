@@ -81,7 +81,7 @@ class Commenter {
          const jsCommentText = getSelectionFirstLineText();
          
          if (jsCommentText.match(/^\s*\/[/*]/)) {
-            runEditorCommentLineAction(monacoEditor);
+            runEditorCommentLineAction();
             return;
          }
          
@@ -113,7 +113,7 @@ class Commenter {
          
          if (commentContext !== JSXCommentContexts.JSX
             && !isUnCommentAction) {
-            runEditorCommentLineAction(monacoEditor);
+            runEditorCommentLineAction();
             return;
          }
          
@@ -161,7 +161,8 @@ class Commenter {
             monaco.KeyMod.CtrlCmd | monaco.KeyCode.US_SLASH,
             () => {
                if (!_isJSXCommentCommandActive) {
-                  return runEditorCommentLineAction(monacoEditor);
+                  runEditorCommentLineAction();
+                  return;
                }
                
                parseJSXExpressionsPromise()
@@ -174,7 +175,9 @@ class Commenter {
                         loc2Range
                      );
                      this.runJsxCommentAction(selection, commentContext);
-                  });
+                  }).catch(()=>{
+                   runEditorCommentLineAction();
+               });
             });
          
          _isJSXCommentCommandActive = true;

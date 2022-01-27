@@ -21,11 +21,11 @@ export const makeGetAstPromise = (parse, monacoEditor) => () => {
    return new Promise(
       (resolve, reject) => {
          try {
-            resolve(
+            return resolve(
                parse(monacoEditor.getValue()) // ast
             );
          } catch (e) {
-            reject(e);
+            return reject(e);
          }
       }
    );
@@ -38,14 +38,14 @@ export const makeParseJSXExpressionsPromise = (
       getAstPromise()
          .then(ast => {
                try {
-                  resolve(
+                  return resolve(
                      _collectJSXExpressions(ast, traverse)
                   );
                } catch (e) {
-                  reject(e);
+                  return reject(e);
                }
             }
-         );
+         ).catch(e => reject(e));
    });
 };
 
@@ -77,22 +77,17 @@ export const makeJSXCommenterBundle = (
 };
 
 // Minimal Babel setup for React JSX parsing:
-export const makeBabelParse = (parse, astRef, onError = e => e) => {
-   astRef.current = null;
+export const makeBabelParse = (parse) => {
    return (code, options = {}) => {
-      try {
-         astRef.current = parse(
-            code,
-            {
-               ...options,
-               sourceType: "module",
-               plugins: ["jsx"],
-               errorRecovery: true
-            });
-      } catch (e) {
-         onError(e);
-      }
-      return astRef.current;
+      return parse(
+         code,
+         {
+            ...options,
+            sourceType: "module",
+            plugins: ["jsx"],
+            errorRecovery: true
+         });
+      
    };
 };
 
@@ -108,8 +103,7 @@ class MonacoJSXHighlighter {
       
       const {jsxCommenter, monacoEditorManager, decoratorMapper} = this.options;
       
-      this.astRef = {};
-      this.babelParse = makeBabelParse(parse, this.astRef);
+      this.babelParse = makeBabelParse(parse);
       
       const [
          _jsxCommenter, _monacoEditorManager,
@@ -149,7 +143,7 @@ class MonacoJSXHighlighter {
             
             //ignore update if parsing was unsuccessful
             if (!ast) {
-               resolve(result);
+               return resolve(result);
             }
             
             try {
@@ -161,9 +155,9 @@ class MonacoJSXHighlighter {
                
                result.jsxExpressions = jsxExpressions;
                
-               resolve(result);
+               return resolve(result);
             } catch (e) {
-               reject(e);
+               return reject(e);
             }
          });
       };
@@ -172,7 +166,7 @@ class MonacoJSXHighlighter {
          afterHighlight = ast => ast,
          onHighlightError = error => error,
          getAstPromise = this.getAstPromise,
-         onGetAstErrors = error => error,
+         onGetAstError = error => error,
       ) => {
          return (
             getAstPromise()
@@ -181,7 +175,7 @@ class MonacoJSXHighlighter {
                      .then(afterHighlight)
                      .catch(onHighlightError)
                })
-               .catch(onGetAstErrors)
+               .catch(onGetAstError)
          );
       };
       
