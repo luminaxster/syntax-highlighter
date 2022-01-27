@@ -153,7 +153,7 @@ const defaultOptions = {
    isHighlightGlyph: false, // if JSX elements should decorate the line number gutter
    iShowHover: false, // if JSX types should  tooltip with their type info
    isUseSeparateElementStyles: false, // if opening elements and closing elements have different styling
-   // you can pass your own custom APIs, check core/ and uitls/ for more details
+   // you can pass your own custom APIs, check core/ and utils/ for more details
    monacoEditorManager: null,
    decoratorMapper: null,
    jsxCommenter: null,
@@ -161,7 +161,7 @@ const defaultOptions = {
 };
 
 const monacoJSXHighlighter = new MonacoJSXHighlighter(
-   monaco, babelParse, traverse, monacoEditor, defaultOptions
+   monaco, babel, traverse, monacoEditor, defaultOptions
 );
 ```
 
