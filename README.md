@@ -31,7 +31,7 @@ const monacoJSXHighlighter = new MonacoJSXHighlighter(
    monaco, babel, traverse, aMonacoEditor()
 );
 // Activate highlighting (debounceTime default: 100ms)
-monacoJSXHighlighter.highlightOnDidChangeModelContent(100);
+monacoJSXHighlighter.highlightOnDidChangeModelContent();
 // Activate JSX commenting
 monacoJSXHighlighter.addJSXCommentCommand();
 
