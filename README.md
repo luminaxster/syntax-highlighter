@@ -28,7 +28,7 @@ import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 
 // Instantiate the highlighter
 const monacoJSXHighlighter = new MonacoJSXHighlighter(
-   monaco, babel, traverse, aMonacoEditor()
+   monaco, parse, traverse, aMonacoEditor()
 );
 // Activate highlighting (debounceTime default: 100ms)
 monacoJSXHighlighter.highlightOnDidChangeModelContent();
