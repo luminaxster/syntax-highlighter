@@ -1,34 +1,34 @@
 module.exports = {
-    "parser": "@babel/eslint-parser",
-    "parserOptions": {
-        requireConfigFile: false,
-        "ecmaVersion": 8
-    },
-    
-    "plugins": [
-        // "react",
-        // "jasmine"
-    ],
-    "extends": [
-        "eslint:recommended",
-        // "plugin:react/recommended",
-        // "plugin:jasmine/recommended"
-    ],
     "env": {
-          "browser": true,
-          "node": false,
-          "es6": true,
-          // "jasmine": true
+        "browser": true,
+        "commonjs": true,
+        "es2021": true,
+        "node": true
     },
+    "extends": [
+        // "standard-with-typescript",
+        // "plugin:react/recommended"
+    ],
+    "overrides": [
+        {
+            "env": {
+                "node": true
+            },
+            "files": [
+                ".eslintrc.{js,cjs}"
+            ],
+            "parserOptions": {
+                "sourceType": "module"
+            }
+        }
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+    },
+    "plugins": [
+        "react"
+    ],
     "rules": {
-        // "react/prop-types": [0],
-        // "react/display-name": [0],
-        // "jasmine/new-line-before-expect": [0],
-        // "react/no-unescaped-entities": [0]
-    },
-    "settings": {
-        // "react": {
-        //     "version": "16.8", // React version. "detect" automatically picks the version you have installed.
-        // },
     }
-};
+}

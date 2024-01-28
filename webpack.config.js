@@ -1,8 +1,8 @@
 // now using rollup
 const path  = require('path');
 
-module.exports = function () {
-   const devMode = true;//!env.production;
+module.exports = function (env) {
+   const devMode = !env.production;
    
    return {
       mode: devMode ? 'development' : 'production',
@@ -22,6 +22,12 @@ module.exports = function () {
                exclude: /node_modules/,
                use: {
                   loader: "babel-loader",
+                  options: {
+                     presets: [
+                        '@babel/preset-env',
+                        '@babel/preset-react',
+                     ]
+                  }
                }
             },
             {
