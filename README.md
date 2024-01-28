@@ -7,7 +7,7 @@ using Babel. It exposes its AST after it does its magic, so you can add your own
 syntax-based or custom highlights.
 
 ## [LIVE DEMO](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js)
-[![monaco-jsx-highlighter demo](https://github.com/luminaxster/syntax-highlighter/blob/demo_file/msh_demo.gif)](https://codesandbox.io/s/monaco-editor-react-with-jsx-highlighting-and-commenting-v1-urce8?file=/src/index.js)
+[![monaco-jsx-highlighter demo](https://github.com/luminaxster/syntax-highlighter/blob/demo_file/msh_demo.gif)](https://codesandbox.io/p/sandbox/monaco-editor-react-with-jsx-highlighting-and-commenting-v2-urce8?file=/src/index.js)
 ```sh
 # with npm (assuming you are already using monaco-editor)
   npm i @babel/parser @babel/traverse monaco-jsx-highlighter
@@ -21,7 +21,7 @@ syntax-based or custom highlights.
 import monaco from 'monaco-editor';
 import {parse} from "@babel/parser";
 import traverse from "@babel/traverse";
-import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
+import MonacoJSXHighlighter, {makeBabelParse} from 'monaco-jsx-highlighter';
 
 // Minimal Babel setup for React JSX parsing:
 const babelParse = code => parse(code, {
@@ -46,11 +46,19 @@ function getMonacoEditor(){
             language: 'javascript'
           });
 }
+
+//use makeBabelParse if unsure of the config you need for TSX
 ```
 
 ## NL;PR
 
-## New in v1.x
+## New in v2
+
+- Adds `makeBabelParse`: babel's parse configuration for JSX/TSX (thanks [@HaimCandiTech](https://github.com/HaimCandiTech))
+- TS codebase migration start.
+- Reported defect fixes(dispose). 
+
+## New in v1
 
 - Babel is now used directly instead of via JsCodeShift.
 - React fragment, spread child, spread attribute, and container expression
