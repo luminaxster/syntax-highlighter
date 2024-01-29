@@ -402,11 +402,16 @@ class MonacoJSXHighlighter {
     }
 
     resetDeltaDecorations() {
-        this.JSXDecoratorIds = (this.monacoEditor?.getModel().deltaDecorations(
-                this.JSXDecoratorIds ?? [],
-                []
+        const model = this.monacoEditor?.getModel();
+        if(model.deltaDecorations){
+            this.JSXDecoratorIds = (model.deltaDecorations(
+                    this.JSXDecoratorIds ?? [],
+                    []
+                )
             )
-        )
+        }else{
+            this.JSXDecoratorIds = [];
+        }
     }
 
     async getAstPromise(forceUpdate) {
