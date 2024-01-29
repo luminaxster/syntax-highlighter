@@ -403,7 +403,7 @@ class MonacoJSXHighlighter {
 
     resetDeltaDecorations() {
         const model = this.monacoEditor?.getModel();
-        if(model.deltaDecorations){
+        if(model?.deltaDecorations){
             this.JSXDecoratorIds = (model.deltaDecorations(
                     this.JSXDecoratorIds ?? [],
                     []
